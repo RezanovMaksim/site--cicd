@@ -2,7 +2,6 @@
 # Файл размещается в репозитории по пути: .github/workflows/deploy.yml
 name: Deploy static site # название workflow (видно на вкладке Actions)
 # Триггер: workflow запускается при каждом push в ветку main
-on:
  push:
  branches: [ main ]
 # Права доступа, необходимые для публикации на GitHub Pages
