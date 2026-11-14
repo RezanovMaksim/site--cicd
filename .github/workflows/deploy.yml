@@ -1,4 +1,3 @@
-# Workflow автоматической публикации статического сайта на GitHub Pages.
 name: Deploy static site # название workflow (видно на вкладке Actions)
 # Триггер: workflow запускается при каждом push в ветку main
  push:
