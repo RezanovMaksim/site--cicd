@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Floor - Игровое поле 10x10</title>
+    <title>The Floor - Визуальное игровое поле</title>
     <style>
         * {
             margin: 0;
@@ -762,7 +762,7 @@
     <div class="container">
         <!-- Экран настроек -->
         <div class="setup-screen" id="setupScreen">
-            <h1>🎮 The Floor 🎮</h1>
+            <h1>The Floor</h1>
 
             <!-- Редактор поля -->
             <div class="field-setup">
@@ -847,7 +847,6 @@
                 <h3>🔊 Звуковые эффекты (MP3)</h3>
                 <p>
                     Загрузите свои MP3-файлы. Если файл не выбран, будет использоваться встроенный звук.<br>
-                    <strong>Папка sounds/</strong>: <code>randomizer.mp3</code>, <code>playerselected.mp3</code>, <code>categoryreveal.mp3</code>, <code>categoryrevealend.mp3</code>, <code>categoryselect.mp3</code>, <code>capture.mp3</code>, <code>categoryexchange.mp3</code>, <code>nextplayer.mp3</code>, <code>nextplayerselected.mp3</code>
                 </p>
 
                 <div class="sound-input-row">
@@ -907,7 +906,7 @@
                 <div class="duel-counter" id="duelCounter">Выпуск 1/1 · Осталось дуэлей: 0</div>
                 <div class="game-controls">
                     <button class="game-btn btn-randomizer" id="randomizerBtn" onclick="startRandomizer()">🎲 Рандомайзер</button>
-                    <button class="game-btn btn-manual" id="manualBtn" onclick="startManualSelection()">👤 Выбрать игрока</button>
+                    <button class="game-btn btn-manual" id="manualBtn" onclick="startManualSelection()">👤 Выбрать игрока вручную</button>
                     <button class="game-btn btn-categories" id="showAllCategoriesBtn" onclick="toggleShowAllCategories()">📋 Показать все категории</button>
                     <button class="game-btn btn-categories" id="showCategoriesBtn" onclick="showCategories()" disabled>📋 Показать категории</button>
                     <button class="game-btn btn-undo" id="undoCaptureBtn" onclick="undoCapture()" disabled>⏪ Отменить захват</button>
