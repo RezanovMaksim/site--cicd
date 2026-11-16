@@ -1,0 +1,3201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Floor - Игровое поле 10x10</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Black', sans-serif;
+            background: linear-gradient(135deg, #1a0033 0%, #003344 50%, #2d1b4e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ===== ЭКРАН НАСТРОЕК ===== */
+        .setup-screen {
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #00CED1;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 206, 209, 0.3);
+            margin: auto;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+
+        .setup-screen h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #00CED1, #8A2BE2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== РЕДАКТОР ПОЛЯ ===== */
+        .field-setup {
+            background: rgba(138, 43, 226, 0.1);
+            border: 2px dashed #8A2BE2;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .field-setup h3 {
+            color: #8A2BE2;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .field-setup p {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        .field-size-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .field-size-row label {
+            color: #00CED1;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .field-size-row select {
+            padding: 8px 14px;
+            font-size: 1em;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00CED1;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .field-size-row select option {
+            background: #1a0033;
+            color: #fff;
+        }
+
+        .field-editor {
+            display: grid;
+            gap: 3px;
+            margin-bottom: 15px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .field-editor input {
+            width: 100%;
+            padding: 4px;
+            font-size: 0.7em;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #00CED1;
+            border-radius: 4px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .field-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .field-controls button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background: linear-gradient(45deg, #00CED1, #8A2BE2);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .field-controls button:hover {
+            box-shadow: 0 0 20px rgba(0, 206, 209, 0.6);
+        }
+
+        /* ===== ВЫПУСКИ (НАСТРОЙКИ) ===== */
+        .episodes-setup {
+            background: rgba(138, 43, 226, 0.1);
+            border: 2px dashed #8A2BE2;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .episodes-setup h3 {
+            color: #8A2BE2;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .episodes-setup p {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        .episodes-count-input {
+            padding: 8px 14px;
+            font-size: 1em;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00CED1;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: bold;
+            width: 80px;
+            text-align: center;
+        }
+
+        .episodes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .episode-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .episode-row label {
+            color: #00CED1;
+            flex: 0 0 120px;
+            font-weight: bold;
+        }
+
+        .episode-row input {
+            width: 80px;
+            padding: 6px 10px;
+            font-size: 1em;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00CED1;
+            border-radius: 8px;
+            color: #fff;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* ===== ЗВУКИ ===== */
+        .sounds-setup {
+            background: rgba(138, 43, 226, 0.1);
+            border: 2px dashed #8A2BE2;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .sounds-setup h3 {
+            color: #8A2BE2;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .sounds-setup p {
+            color: #aaa;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        .sound-input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sound-input-row label {
+            flex: 0 0 180px;
+            font-size: 1em;
+            margin: 0;
+            color: #00CED1;
+        }
+
+        .sound-input-row input[type="file"] {
+            flex: 1;
+            color: #fff;
+            font-size: 0.9em;
+        }
+
+        .sound-input-row input[type="file"]::file-selector-button {
+            background: linear-gradient(45deg, #00CED1, #8A2BE2);
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .sound-status {
+            flex: 0 0 100px;
+            font-size: 0.85em;
+            text-align: right;
+            font-family: Arial, sans-serif;
+        }
+
+        .sound-status.loaded {
+            color: #00ff88;
+        }
+
+        .sound-status.default {
+            color: #888;
+        }
+
+        .start-game-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.5em;
+            background: linear-gradient(45deg, #00CED1, #8A2BE2);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .start-game-btn:hover {
+            box-shadow: 0 0 30px rgba(0, 206, 209, 0.6);
+        }
+
+        /* ===== ЭКРАН ИГРЫ ===== */
+        .game-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .game-screen.active {
+            display: flex;
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status {
+            font-size: 1.3em;
+            color: #00CED1;
+            text-shadow: 0 0 10px #00CED1;
+        }
+
+        .duel-counter {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #FFD700;
+            border-radius: 10px;
+            padding: 8px 15px;
+            font-size: 1em;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .bonus-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            min-height: 10px;
+        }
+
+        .btn-bonus {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+        }
+
+        .btn-bonus:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .game-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+
+        .game-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-randomizer {
+            background: linear-gradient(45deg, #00CED1, #8A2BE2);
+            color: #fff;
+        }
+
+        .btn-randomizer:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(0, 206, 209, 0.6);
+        }
+
+        .btn-manual {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+        }
+
+        .btn-manual:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        .btn-manual.active {
+            animation: manualPulse 1s infinite;
+        }
+
+        @keyframes manualPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(255, 215, 0, 1); }
+        }
+
+        .btn-categories {
+            background: linear-gradient(45deg, #40E0D0, #9370DB);
+            color: #fff;
+        }
+
+        .btn-categories:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(64, 224, 208, 0.6);
+        }
+
+        .btn-undo {
+            background: linear-gradient(45deg, #B8860B, #DAA520);
+            color: #fff;
+        }
+
+        .btn-undo:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(218, 165, 32, 0.6);
+        }
+
+        .btn-back {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            color: #fff;
+        }
+
+        .btn-back:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.6);
+        }
+
+        .btn-leader {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+        }
+
+        .btn-leader:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+
+        /* ===== ИГРОВОЕ ПОЛЕ ===== */
+        .field-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            margin-bottom: 20px;
+        }
+
+        .field {
+            display: grid;
+            gap: 0px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 0 40px rgba(0, 206, 209, 0.3);
+            max-width: 1150px;
+            width: 100%;
+            position: relative;
+        }
+
+        .cell {
+            aspect-ratio: 4 / 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4px;
+            cursor: pointer;
+            transition: background 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+            background: #00CED1;
+            border: 1px solid #00CED1;
+        }
+
+        .cell.empty {
+            background: rgba(50, 50, 50, 0.5);
+            cursor: default;
+        }
+
+        .cell .player-name {
+            font-size: var(--player-font-size, 0.7em);
+            font-weight: bold;
+            text-align: center;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            margin-bottom: 2px;
+            word-break: break-word;
+            line-height: 1.1;
+        }
+
+        .cell .category-name {
+            font-size: var(--category-font-size, 0.55em);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            word-break: break-word;
+            line-height: 1.1;
+            display: none;
+        }
+
+        .cell.neighbor-highlight .category-name {
+            display: block;
+        }
+
+        /* Показ категории победителя на получившейся территории после захвата */
+        .cell.show-winner-category .category-name {
+            display: block;
+        }
+
+        /* Границы между территориями */
+        .cell.border-top {
+            border-top: 3px solid #FFFFFF;
+        }
+
+        .cell.border-right {
+            border-right: 3px solid #FFFFFF;
+        }
+
+        .cell.border-bottom {
+            border-bottom: 3px solid #FFFFFF;
+        }
+
+        .cell.border-left {
+            border-left: 3px solid #FFFFFF;
+        }
+
+        /* Подсветка выбранной территории (фиолетовая) */
+        .cell.selected-player {
+            background: #9C27B0;
+            border-color: #9C27B0;
+        }
+
+        /* Подсветка соседних территорий при показе категорий (голубая) */
+        .cell.neighbor-highlight {
+            background: #2196F3;
+            border-color: #2196F3;
+        }
+
+        /* Обе территории-участницы дуэли (фиолетовые) */
+        .cell.selectable-winner {
+            background: #9C27B0;
+            border-color: #9C27B0;
+        }
+
+        /* Территория победителя во время захвата (оранжевая) */
+        .cell.capture-winner {
+            background: #FF9800;
+            border-color: #FF9800;
+        }
+
+        /* Территория проигравшего в начале захвата (голубая) */
+        .cell.capture-loser {
+            background: #2196F3;
+            border-color: #2196F3;
+        }
+
+        /* Подсветка самой большой территории в конце выпуска (золотая) */
+        .cell.biggest-territory {
+            background: #FFD700;
+            border-color: #FFD700;
+            animation: biggestPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes biggestPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
+            50% { box-shadow: 0 0 30px rgba(255, 215, 0, 1); }
+        }
+
+        /* Подсветка территории игрока с бонусом (однородная золотая) */
+        .cell.bonus-territory {
+            background: #FFD700;
+            border-color: #FFD700;
+            box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        /* Подсветка территории, доступной для обмена категорией (голубая, как при выборе территории) */
+        .cell.category-exchange-target {
+            background: #2196F3;
+            border-color: #2196F3;
+            animation: exchangeTargetPulse 1s ease-in-out infinite;
+        }
+
+        /* Показ категории на территориях, доступных для обмена */
+        .cell.category-exchange-target .category-name {
+            display: block;
+        }
+
+        /* Подсветка территории, доступной для выбора следующим атакующим (голубая, как у соседних территорий) */
+        .cell.next-player-target {
+            background: #2196F3;
+            border-color: #2196F3;
+            animation: nextPlayerTargetPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes nextPlayerTargetPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(33, 150, 243, 0.8); }
+            50% { box-shadow: 0 0 30px rgba(33, 150, 243, 1); }
+        }
+
+        /* Обёртка поля: позиционирование мишени относительно игрового поля.
+           Сохраняет прежнее поведение .field (заполняет ширину с ограничением max-width),
+           чтобы размер поля не зависел от содержимого клеток. */
+        .field-wrap {
+            position: relative;
+            width: 100%;
+            max-width: 1150px;
+        }
+
+        /* ===== Мишень при выборе следующего игрока (бонус) ===== */
+        .bonus-target-reticle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 50;
+            border: 3px solid #FFD700;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), inset 0 0 15px rgba(255, 215, 0, 0.4);
+            transition: left 0.9s cubic-bezier(0.33, 1, 0.68, 1), top 0.9s cubic-bezier(0.33, 1, 0.68, 1), width 0.9s ease, height 0.9s ease;
+        }
+
+        /* Внутренняя часть мишени: круг с крестиком */
+        .bonus-target-reticle .reticle-inner {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            height: 50%;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            box-sizing: border-box;
+        }
+
+        .bonus-target-reticle .reticle-inner::before,
+        .bonus-target-reticle .reticle-inner::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: #FFD700;
+        }
+
+        .bonus-target-reticle .reticle-inner::before {
+            width: 100%;
+            height: 2px;
+        }
+
+        .bonus-target-reticle .reticle-inner::after {
+            width: 2px;
+            height: 100%;
+        }
+
+        @keyframes exchangeTargetPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(33, 150, 243, 0.8); }
+            50% { box-shadow: 0 0 30px rgba(33, 150, 243, 1); }
+        }
+
+        /* Показ всех категорий на главных клетках территорий (при выборе бонуса за 3 победы подряд) */
+        .cell.show-all-categories .category-name {
+            display: block;
+        }
+
+        /* Участники анимации обмена категорией: показываем категории */
+        .cell.category-exchange-active .category-name {
+            display: block;
+        }
+
+        /* Затемнение территорий, не участвующих в обмене категорией */
+        .cell.exchange-dimmed {
+            filter: brightness(0.45) saturate(0.7);
+            box-shadow: none;
+            animation: none;
+        }
+
+        /* Только категория «жертвы» засасывается в вакуум (сжимается текст) */
+        .category-name.category-vacuum-suck {
+            animation: categoryVacuumSuck 1s ease-in forwards;
+        }
+
+        @keyframes categoryVacuumSuck {
+            0% { transform: scale(1); opacity: 1; }
+            60% { transform: scale(1.3); opacity: 1; filter: brightness(2); }
+            100% { transform: scale(0.05); opacity: 0; filter: brightness(3); }
+        }
+
+        /* Появление категории на новой территории после переноса */
+        .category-name.category-arrive {
+            animation: categoryArrive 1s ease-out both;
+        }
+
+        @keyframes categoryArrive {
+            0% { transform: scale(0.2); opacity: 0; filter: brightness(2.5); }
+            70% { transform: scale(1.15); opacity: 1; filter: brightness(1.4); }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        }
+
+        /* Заголовок выбора бонуса */
+        .bonus-choice-title {
+            width: 100%;
+            text-align: center;
+            color: #FFD700;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 5px;
+        }
+
+        /* Белые границы между разными территориями остаются белыми поверх любой подсветки */
+        .cell.border-top { border-top-color: #FFFFFF; }
+        .cell.border-right { border-right-color: #FFFFFF; }
+        .cell.border-bottom { border-bottom-color: #FFFFFF; }
+        .cell.border-left { border-left-color: #FFFFFF; }
+
+        .cell.manual-selectable {
+            cursor: crosshair;
+            box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .cell.flashing {
+            animation: flash 0.45s;
+        }
+
+        @keyframes flash {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(2.5); }
+            100% { filter: brightness(1); }
+        }
+
+        .cell.capturing {
+            animation: capture 0.5s;
+        }
+
+        @keyframes capture {
+            0% { background: #FFD700; filter: brightness(1); }
+            50% { background: #FFD700; filter: brightness(2); }
+            100% { background: #FF9800; filter: brightness(1); }
+        }
+
+        /* Белая вспышка, пробегающая волной по полю при выборе игрока рандомайзером. Заливает всю клетку белым (filter) и дополнительно подсвечивает границы (box-shadow). */
+        .cell.white-flash {
+            animation: whiteFlashWave 0.5s ease-out both;
+        }
+
+        @keyframes whiteFlashWave {
+            0% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0); }
+            40% { filter: brightness(1.8) saturate(0.5); box-shadow: inset 0 0 10px 5px rgba(255, 255, 255, 0.5); }
+            100% { filter: brightness(1) saturate(1); box-shadow: inset 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Экран настроек -->
+        <div class="setup-screen" id="setupScreen">
+            <h1>🎮 The Floor 🎮</h1>
+
+            <!-- Редактор поля -->
+            <div class="field-setup">
+                <h3>🗺️ Игровое поле</h3>
+                <p>Формат каждой клетки: <strong>Имя;Категория</strong>. Оставьте пустым, если клетка не используется.</p>
+                <div class="field-size-row">
+                    <label for="fieldWidthSelect">Ширина поля:</label>
+                    <select id="fieldWidthSelect" onchange="onFieldSizeChange()">
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10" selected>10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                    </select>
+                    <label for="fieldHeightSelect">Высота поля:</label>
+                    <select id="fieldHeightSelect" onchange="onFieldSizeChange()">
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10" selected>10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                    </select>
+                </div>
+                <div class="field-editor" id="fieldEditor"></div>
+                <div class="field-controls">
+                    <button onclick="generateRandomField()">🎲 Случайные</button>
+                    <button onclick="shufflePlayers()">🔀 Перемешать участников</button>
+                    <button onclick="clearField()">🗑️ Очистить</button>
+                </div>
+            </div>
+
+            <!-- Выпуски -->
+            <div class="episodes-setup">
+                <h3>📅 Выпуски</h3>
+                <p>
+                    Укажите количество выпусков и число дуэлей в каждом. Когда выпуск завершается,
+                    по кнопке «Огласить лидера» на 5 секунд подсвечивается наибольшая территория
+                    (или все лидеры, если их несколько).
+                </p>
+                <div class="field-size-row">
+                    <label for="episodesCount">Количество выпусков:</label>
+                    <input type="number" id="episodesCount" class="episodes-count-input" min="1" max="50" value="1" onchange="onEpisodesCountChange()">
+                </div>
+                <div id="episodesList" class="episodes-list"></div>
+            </div>
+
+            <!-- Бонусная категория финала -->
+            <div class="episodes-setup">
+                <h3>🏁 Финал</h3>
+                <p>
+                    Когда на поле остаются два игрока, сразу показываются кнопки выбора категории финала.
+                    Если бонусная категория не задана, победителя игры определяет выбранная дуэль.
+                    Если бонусная категория задана, дуэли проводятся в категориях обоих участников
+                    (можно выбрать, какая будет первой), и при счёте 1:1 исход игры решает
+                    дуэль в бонусной категории.
+                </p>
+                <input type="text" id="bonusCategoryInput" class="episodes-count-input" style="width: 320px; text-align: left;" placeholder="Например: Общие знания">
+            </div>
+
+            <!-- Звуки -->
+            <div class="sounds-setup">
+                <h3>🔊 Звуковые эффекты (MP3)</h3>
+                <p>
+                    Загрузите свои MP3-файлы. Если файл не выбран, будет использоваться встроенный звук.<br>
+                    <strong>Папка sounds/</strong>: <code>randomizer.mp3</code>, <code>playerselected.mp3</code>, <code>categoryreveal.mp3</code>, <code>categoryrevealend.mp3</code>, <code>categoryselect.mp3</code>, <code>capture.mp3</code>, <code>categoryexchange.mp3</code>, <code>nextplayer.mp3</code>, <code>nextplayerselected.mp3</code>
+                </p>
+
+                <div class="sound-input-row">
+                    <label>Рандомайзер:</label>
+                    <input type="file" id="soundRandomizer" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusRandomizer">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Выбор игрока:</label>
+                    <input type="file" id="soundPlayerselected" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusPlayerselected">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Показ категорий:</label>
+                    <input type="file" id="soundCategoryreveal" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusCategoryreveal">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Конец показа категорий:</label>
+                    <input type="file" id="soundCategoryrevealend" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusCategoryrevealend">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Оппонент выбран:</label>
+                    <input type="file" id="soundCategoryselect" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusCategoryselect">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Захват территории:</label>
+                    <input type="file" id="soundCapture" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusCapture">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Обмен категорией:</label>
+                    <input type="file" id="soundCategoryexchange" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusCategoryexchange">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Выбор следующего игрока:</label>
+                    <input type="file" id="soundNextplayer" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusNextplayer">по умолчанию</span>
+                </div>
+                <div class="sound-input-row">
+                    <label>Следующий игрок выбран:</label>
+                    <input type="file" id="soundNextplayerselected" accept="audio/mp3,audio/mpeg">
+                    <span class="sound-status default" id="statusNextplayerselected">по умолчанию</span>
+                </div>
+            </div>
+            
+            <button class="start-game-btn" onclick="startGame()">Начать игру</button>
+        </div>
+
+        <!-- Игровой экран -->
+        <div class="game-screen" id="gameScreen">
+            <div class="game-header">
+                <div class="status" id="gameStatus">Готов к игре</div>
+                <div class="duel-counter" id="duelCounter">Выпуск 1/1 · Осталось дуэлей: 0</div>
+                <div class="game-controls">
+                    <button class="game-btn btn-randomizer" id="randomizerBtn" onclick="startRandomizer()">🎲 Рандомайзер</button>
+                    <button class="game-btn btn-manual" id="manualBtn" onclick="startManualSelection()">👤 Выбрать игрока</button>
+                    <button class="game-btn btn-categories" id="showAllCategoriesBtn" onclick="toggleShowAllCategories()">📋 Показать все категории</button>
+                    <button class="game-btn btn-categories" id="showCategoriesBtn" onclick="showCategories()" disabled>📋 Показать категории</button>
+                    <button class="game-btn btn-undo" id="undoCaptureBtn" onclick="undoCapture()" disabled>⏪ Отменить захват</button>
+                    <button class="game-btn btn-leader" id="announceLeaderBtn" onclick="announceEpisodeLeader()" disabled>🏆 Огласить лидера</button>
+                    <button class="game-btn btn-back" id="backToFieldBtn" onclick="backToField()" disabled>↩️ Вернуться на поле</button>
+                </div>
+            </div>
+
+            <div class="bonus-controls" id="bonusControls"></div>
+            
+            <div class="field-container">
+                <div class="field-wrap">
+                    <div class="field" id="gameField"></div>
+                    <div class="bonus-target-reticle" id="bonusTargetReticle">
+                        <div class="reticle-inner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // АУДИО СИСТЕМА
+        // =====================================================================
+        let audioContext;
+
+        const soundFiles = {
+            randomizer: null,
+            playerselected: null,
+            categoryreveal: null,
+            categoryrevealend: null,
+            categoryselect: null,
+            capture: null,
+            categoryexchange: null,
+            nextplayer: null,
+            nextplayerselected: null
+        };
+
+        const defaultSoundPaths = {
+            randomizer: 'sounds/randomizer.mp3',
+            playerselected: 'sounds/playerselected.mp3',
+            categoryreveal: 'sounds/categoryreveal.mp3',
+            categoryrevealend: 'sounds/categoryrevealend.mp3',
+            categoryselect: 'sounds/categoryselect.mp3',
+            capture: 'sounds/capture.mp3',
+            categoryexchange: 'sounds/categoryexchange.mp3',
+            nextplayer: 'sounds/nextplayer.mp3',
+            nextplayerselected: 'sounds/nextplayerselected.mp3'
+        };
+
+        function tryLoadDefaultSounds() {
+            Object.keys(defaultSoundPaths).forEach(key => {
+                const audio = new Audio();
+                audio.preload = 'auto';
+                audio.src = defaultSoundPaths[key];
+                
+                audio.addEventListener('canplaythrough', () => {
+                    soundFiles[key] = audio;
+                    updateSoundStatus(key, true);
+                }, { once: true });
+                
+                audio.addEventListener('error', () => {}, { once: true });
+            });
+        }
+
+        function updateSoundStatus(key, loaded) {
+            const statusEl = document.getElementById('status' + key.charAt(0).toUpperCase() + key.slice(1));
+            if (statusEl) {
+                if (loaded) {
+                    statusEl.textContent = '✓ загружен';
+                    statusEl.className = 'sound-status loaded';
+                } else {
+                    statusEl.textContent = 'по умолчанию';
+                    statusEl.className = 'sound-status default';
+                }
+            }
+        }
+
+        function setupSoundInputs() {
+            const soundKeys = ['randomizer', 'playerselected', 'categoryreveal', 'categoryrevealend', 'categoryselect', 'capture', 'categoryexchange', 'nextplayer', 'nextplayerselected'];
+            const inputIds = ['soundRandomizer', 'soundPlayerselected', 'soundCategoryreveal', 'soundCategoryrevealend', 'soundCategoryselect', 'soundCapture', 'soundCategoryexchange', 'soundNextplayer', 'soundNextplayerselected'];
+            
+            inputIds.forEach((inputId, idx) => {
+                const input = document.getElementById(inputId);
+                const key = soundKeys[idx];
+                
+                input.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const url = URL.createObjectURL(file);
+                        const audio = new Audio();
+                        audio.preload = 'auto';
+                        audio.src = url;
+                        
+                        audio.addEventListener('canplaythrough', () => {
+                            soundFiles[key] = audio;
+                            updateSoundStatus(key, true);
+                        }, { once: true });
+                    }
+                });
+            });
+        }
+
+        function playSound(key, fallbackFn) {
+            if (soundFiles[key]) {
+                try {
+                    const audioClone = soundFiles[key].cloneNode();
+                    audioClone.volume = 0.7;
+                    audioClone.play().catch(() => {
+                        if (fallbackFn) fallbackFn();
+                    });
+                } catch (err) {
+                    if (fallbackFn) fallbackFn();
+                }
+            } else if (fallbackFn) {
+                fallbackFn();
+            }
+        }
+
+        // =====================================================================
+        // СИНТЕЗИРОВАННЫЕ ЗВУКИ (FALLBACK)
+        // =====================================================================
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playTone(frequency, duration, type = 'sine', volume = 0.3) {
+            if (!audioContext) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function synthRandomizerMusic() {
+            let step = 0;
+            const totalSteps = 60;
+            
+            const interval = setInterval(() => {
+                if (step >= totalSteps) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                const freq = 200 + (step * 10);
+                playTone(freq, 0.15, 'sawtooth', 0.2);
+                
+                if (step % 4 === 0) {
+                    playTone(100, 0.1, 'square', 0.3);
+                }
+                
+                step++;
+            }, 200);
+        }
+
+        function synthPlayerSelected() {
+            playTone(600, 0.1, 'sine', 0.5);
+            setTimeout(() => playTone(800, 0.1, 'sine', 0.5), 100);
+            setTimeout(() => playTone(1000, 0.15, 'sine', 0.5), 200);
+            setTimeout(() => playTone(1200, 0.2, 'sine', 0.5), 300);
+        }
+
+        function synthCategoryReveal() {
+            // Один короткий тон на категорию, чтобы звуков не было больше, чем самих категорий
+            playTone(700, 0.12, 'sine', 0.4);
+        }
+
+        function synthCategoryRevealEnd() {
+            // Завершающий звук показа категорий: восходящий тон-«финиш»
+            playTone(600, 0.12, 'sine', 0.4);
+            setTimeout(() => playTone(800, 0.12, 'sine', 0.4), 120);
+            setTimeout(() => playTone(1100, 0.25, 'sine', 0.45), 240);
+        }
+
+        function synthCategorySelect() {
+            playTone(700, 0.15, 'triangle', 0.4);
+            setTimeout(() => playTone(900, 0.2, 'triangle', 0.4), 100);
+        }
+
+        function synthCapture() {
+            let step = 0;
+            const interval = setInterval(() => {
+                if (step >= 10) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                const freq = 200 + (step * 50);
+                playTone(freq, 0.2, 'sawtooth', 0.3);
+                
+                if (step % 2 === 0) {
+                    playTone(freq * 1.5, 0.15, 'square', 0.2);
+                }
+                
+                step++;
+            }, 100);
+        }
+
+        function synthCategoryExchange() {
+            // Плавный «свеп» с быстрым пассажем вверх: ощущение переноса категории
+            playTone(300, 0.25, 'triangle', 0.4);
+            setTimeout(() => playTone(420, 0.25, 'triangle', 0.4), 250);
+            setTimeout(() => playTone(600, 0.3, 'triangle', 0.4), 500);
+            setTimeout(() => playTone(900, 0.2, 'triangle', 0.45), 800);
+        }
+
+        function synthNextPlayer() {
+            // «Тикающие» звуки, похожие на работу рандомайзера: короткие повторяющиеся ноты
+            playTone(500, 0.08, 'square', 0.25);
+            setTimeout(() => playTone(550, 0.08, 'square', 0.25), 250);
+            setTimeout(() => playTone(500, 0.08, 'square', 0.25), 500);
+            setTimeout(() => playTone(600, 0.08, 'square', 0.25), 750);
+        }
+
+        function synthNextPlayerSelected() {
+            // Завершающий аккорд: короткое восходящее разрешение
+            playTone(700, 0.12, 'triangle', 0.4);
+            setTimeout(() => playTone(900, 0.12, 'triangle', 0.4), 120);
+            setTimeout(() => playTone(1200, 0.2, 'triangle', 0.45), 240);
+        }
+
+        // =====================================================================
+        // ФУНКЦИИ ВОСПРОИЗВЕДЕНИЯ (MP3 с fallback на синтез)
+        // =====================================================================
+
+        function playRandomizerMusic() {
+            playSound('randomizer', synthRandomizerMusic);
+        }
+
+        function playPlayerSelectedSound() {
+            playSound('playerselected', synthPlayerSelected);
+        }
+
+        function playCategoryRevealSound() {
+            playSound('categoryreveal', synthCategoryReveal);
+        }
+
+        // Зацикленный звук показа категорий: играёт с первой категории до конца показа
+        let categoryRevealLoopAudio = null;
+
+        function startCategoryRevealLoopSound() {
+            // Останавливаем предыдущий зацикленный звук, если он ещё играет
+            stopCategoryRevealLoopSound();
+            if (soundFiles.categoryreveal) {
+                try {
+                    // Используем копию исходного аудио, чтобы не мешать одновременным коротким звукам
+                    const audio = soundFiles.categoryreveal.cloneNode();
+                    audio.loop = true;
+                    audio.volume = 0.7;
+                    audio.play().catch(() => {
+                        // Fallback нужен, только если этот аудио-элемент всё ещё активен:
+                        // после остановки промис play() может отклониться с задержкой,
+                        // и без этой проверки запустился бы бесконечный синтезированный луп
+                        if (categoryRevealLoopAudio === audio) {
+                            synthCategoryRevealLoop();
+                        }
+                    });
+                    categoryRevealLoopAudio = audio;
+                } catch (err) {
+                    synthCategoryRevealLoop();
+                }
+            } else {
+                synthCategoryRevealLoop();
+            }
+        }
+
+        // Остановить зацикленный звук показа категорий (если играет)
+        function stopCategoryRevealLoopSound() {
+            if (categoryRevealLoopAudio) {
+                try {
+                    // Только pause + сброс позиции: сброс src прерывает промис play()
+                    // и вызывает его .catch(), что приводило к «вечному» fallback-звуку
+                    categoryRevealLoopAudio.pause();
+                    categoryRevealLoopAudio.currentTime = 0;
+                } catch (err) {}
+                categoryRevealLoopAudio = null;
+            }
+            if (categoryRevealLoopInterval) {
+                clearInterval(categoryRevealLoopInterval);
+                categoryRevealLoopInterval = null;
+            }
+        }
+
+        // Синтезированный зацикленный звук (fallback): повторяющиеся ноты, пока не остановлен
+        let categoryRevealLoopInterval = null;
+
+        function synthCategoryRevealLoop() {
+            if (categoryRevealLoopInterval) return;
+            categoryRevealLoopInterval = setInterval(() => {
+                playTone(700, 0.12, 'sine', 0.4);
+            }, 200);
+        }
+
+        function playCategoryRevealEndSound() {
+            playSound('categoryrevealend', synthCategoryRevealEnd);
+        }
+
+        function playCategorySelectSound() {
+            playSound('categoryselect', synthCategorySelect);
+        }
+
+        function playCaptureSound() {
+            playSound('capture', synthCapture);
+        }
+
+        function playCategoryExchangeSound() {
+            playSound('categoryexchange', synthCategoryExchange);
+        }
+
+        function playNextPlayerSound() {
+            playSound('nextplayer', synthNextPlayer);
+        }
+
+        function playNextPlayerSelectedSound() {
+            playSound('nextplayerselected', synthNextPlayerSelected);
+        }
+
+        // =====================================================================
+        // ИГРОВОЕ ПОЛЕ
+        // =====================================================================
+        let grid = [];
+        // Ширина поля (количество клеток по горизонтали)
+        let fieldCols = 10;
+        // Высота поля (количество клеток по вертикали)
+        let fieldRows = 10;
+        // Стартовая клетка каждого игрока (клетка, с которой игрок начал игру)
+        let playerStartCells = {};
+        let gameState = 'idle'; // idle, randomizing, selectingPlayer, playerSelected, showingCategories, selectingWinner, capturing, afterCapture, episodeHighlight, gameOver
+        let selectedPlayer = null;
+        let selectedCategory = null;
+        let selectedOpponent = null;
+        // Таймеры последовательного показа категорий (по одной каждые 300 мс)
+        let categoryRevealTimers = [];
+        // Снимок поля перед захватом (для кнопки «Отменить захват»)
+        let snapshotBeforeCapture = null;
+        // Флаг завершения игры (победитель определён)
+        let gameOver = false;
+
+        // Настройки выпусков: количество дуэлей в каждом выпуске
+        let episodeDuelCounts = [];
+        // Текущий выпуск (индекс с 0) и число сыгранных дуэлей в нём
+        let currentEpisode = 0;
+        let duelsInCurrentEpisode = 0;
+        // Таймер подсветки самой большой территории в конце выпуска
+        let episodeHighlightTimeout = null;
+
+        // Финал: когда на поле остались 2 игрока, дуэли проводятся в категориях обоих
+        // участников; при счёте 1:1 — решающая дуэль в бонусной категории
+        let bonusCategory = '';
+        // Текущее состояние финала:
+        // null — финал не идёт,
+        // { stage: 'orderChoice', ... } — выбор порядка категорий,
+        // { stage: 'orderChoiceHighlight', ... } — подсветка категорий к выбору порядка,
+        // { stage: 'duel', ... } — идёт дуэль (выбор победителя),
+        // { stage: 'scores', ... } — между дуэлями (показ счёта),
+        // { stage: 'bonusDuel', ... } — решающая дуэль в бонусной категории
+        let finalState = null;
+
+        // Бонусы за 3 победы подряд
+        // winStreaks: Имя игрока -> сколько побед подряд (сбрасывается при возврате на поле/проигрыше)
+        let winStreaks = {};
+        // hasBonus: Имя игрока -> есть ли активный бонус (👑)
+        let hasBonus = {};
+        // Был ли бонус использован в текущей дуэли (для учёта при выборе победителя)
+        let bonusUsedThisDuel = {};
+        // Показанные соседние территории в состоянии showingCategories (для контекстной подсветки бонуса)
+        let revealedNeighbors = new Set();
+        // Игрок, которому после 3 побед подряд нужно выбрать бонус (золотая территория или обмен категорией)
+        let chooseBonusFor = null;
+        // Игрок, выбравший обмен категорией и ожидающий выбора территории для обмена
+        let categoryExchangePlayer = null;
+        // Игрок, выбравший бонус «Выбрать следующего игрока» и ожидающий выбора следующего атакующего
+        let chooseNextPlayerFor = null;
+
+        const defaultCategories = [
+            'Футболисты', 'Достопримечательности России', 'Российские хиты', 'Слоганы', 'Персонажи Диснея', 'Анатомия', 'Спортсмены', 'Детская литература', 'Напитки', 'Комики',
+            'Российские актёры', 'Английский язык', 'Бридж', 'Карта мира', 'Евровидение', 'Астрономия', 'Млекопитающие', 'Овощи', 'Музыкальные инструменты', 'Автомобильные марки',
+            'Математика', 'Модели', 'Главы государств', 'Музыкальные альбомы', 'Изобретения', 'Логотипы', 'Одежда', 'Зарубежные сериалы', 'Валюты', 'Иностранные актёры',
+            'Мультфильмы', 'Новости', 'Пословицы и поговорки', 'Знаменитости', 'Закуски', 'Персонажи фильмов и сериалов', 'Спортивный инвентарь', 'Российские политики', 'Хобби и ремёсла', 'Достопримечательности мира',
+            'Российские телеканалы', 'Штаты США', 'Зарубежные фильмы', 'Игрушки', 'Известные бриджисты', 'Фразеологизмы', 'Художники', 'Посуда', 'Российские телеведущие', 'Исторические события',
+            'Российские исполнители', 'Фрукты', 'Спортивные логотипы', 'Мифология и религия', 'Символы и знаки', 'Российские телеигры', 'Карточные игры', 'Настольные игры', 'Зарубежные хиты', 'Виды спорта',
+            'Зарубежная литература', 'Косплеи', 'Российские правители', 'Названия песен', 'Острова', 'Медицина', 'Цветы и растения', 'Российские телепередачи', 'Русская литература', 'Губернаторы и мэры России',
+            'Киноафиши', 'Зарубежные исполнители', 'Аккаунты в соцсетях', 'Продукты', 'Хлеб и выпечка', 'Профессии', 'Футбольные сборные', 'Красная книга', 'Мобильные приложения', 'Известные дуэты',
+            'Известные персонажи', 'Карта России', 'Звёздные пары', 'Исторические личности', 'Цитаты из фильмов', 'Красота и гигиена', 'Транспорт', 'Общественные помещения', 'Флаги', 'Повара',
+            'Русская кухня', 'Звёздные бывшие', 'Музыкальные клипы', 'Птицы', 'Геометрия', 'Канцелярия', 'Аниме', 'Кухни народов мира', 'Праздники и традиции', 'Музыкальные группы',
+            'Аббривеатуры', 'Известные трио', 'Мировые рекорды', 'Звёзды реалити-шоу', 'Президенты США', 'Инструменты', 'Единицы измерения', 'Водоёмы', 'Лауреаты Оскара', 'Химические элементы'
+        ];
+
+        function generateRandomField() {
+            const editor = document.getElementById('fieldEditor');
+            editor.innerHTML = '';
+            
+            const totalCells = fieldCols * fieldRows;
+            
+            // Генерируем достаточное количество категорий (при необходимости повторяем)
+            const shuffledCategories = [...defaultCategories].sort(() => Math.random() - 0.5);
+            const categories = [];
+            while (categories.length < totalCells) {
+                categories.push(...shuffledCategories);
+            }
+            
+            for (let i = 0; i < totalCells; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = `Игрок ${i + 1};${categories[i]}`;
+                input.dataset.index = i;
+                editor.appendChild(input);
+            }
+        }
+
+        function clearField() {
+            const editor = document.getElementById('fieldEditor');
+            editor.innerHTML = '';
+            
+            for (let i = 0; i < fieldCols * fieldRows; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = '';
+                input.dataset.index = i;
+                editor.appendChild(input);
+            }
+        }
+
+        // Перемешать участников: каждый участник остаётся со своей категорией,
+        // но пары «Имя;Категория» случайно меняются местами (пустые клетки не трогаем)
+        function shufflePlayers() {
+            const editor = document.getElementById('fieldEditor');
+            const inputs = Array.from(editor.querySelectorAll('input'));
+            const nonEmpty = inputs.filter(input => input.value.trim() !== '');
+            if (nonEmpty.length < 2) return;
+
+            // Перемешиваем значения непустых клеток (Fisher–Yates)
+            const values = nonEmpty.map(input => input.value);
+            for (let i = values.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [values[i], values[j]] = [values[j], values[i]];
+            }
+
+            // Записываем перемешанные значения обратно
+            nonEmpty.forEach((input, index) => {
+                input.value = values[index];
+            });
+        }
+
+        // =====================================================================
+        // НАСТРОЙКИ ВЫПУСКОВ
+        // =====================================================================
+
+        // Обработчик изменения количества выпусков
+        function onEpisodesCountChange() {
+            const input = document.getElementById('episodesCount');
+            let count = parseInt(input.value, 10);
+            if (!count || count < 1) count = 1;
+            if (count > 50) count = 50;
+            input.value = count;
+            renderEpisodesList(count);
+        }
+
+        // Перерисовать список выпусков с полями количества дуэлей
+        function renderEpisodesList(count) {
+            const list = document.getElementById('episodesList');
+            if (!list) return;
+            list.innerHTML = '';
+
+            // По умолчанию суммарное число дуэлей — на 1 меньше, чем клеток поля (как число дуэлей в The Floor)
+            const totalDefault = Math.max(0, fieldCols * fieldRows - 1);
+            const base = Math.floor(totalDefault / count);
+            const extra = totalDefault % count;
+
+            for (let i = 1; i <= count; i++) {
+                const row = document.createElement('div');
+                row.className = 'episode-row';
+
+                const label = document.createElement('label');
+                label.textContent = `Выпуск ${i}:`;
+
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.min = '1';
+                const prev = episodeDuelCounts[i - 1];
+                input.value = (prev != null && prev > 0) ? prev : (base + (i <= extra ? 1 : 0));
+
+                row.appendChild(label);
+                row.appendChild(input);
+                list.appendChild(row);
+            }
+        }
+
+        // Прочитать настройки выпусков из формы
+        function readEpisodeSettings() {
+            const inputs = document.querySelectorAll('#episodesList input');
+            episodeDuelCounts = Array.from(inputs).map(inp => {
+                const v = parseInt(inp.value, 10);
+                return (!v || v < 1) ? 1 : v;
+            });
+            if (episodeDuelCounts.length === 0) episodeDuelCounts = [1];
+        }
+
+        // Обновить счётчик «осталось дуэлей до конца выпуска»
+        function updateDuelCounter() {
+            const el = document.getElementById('duelCounter');
+            if (!el) return;
+            if (currentEpisode >= episodeDuelCounts.length) {
+                el.textContent = '🏁 Все выпуски завершены';
+                return;
+            }
+            const needed = episodeDuelCounts[currentEpisode] || 0;
+            const remaining = Math.max(0, needed - duelsInCurrentEpisode);
+            el.textContent = `Выпуск ${currentEpisode + 1}/${episodeDuelCounts.length} · Осталось дуэлей: ${remaining}`;
+        }
+
+        // Завершён ли текущий выпуск (достигнуто нужное число дуэлей)
+        function isCurrentEpisodeFinished() {
+            if (currentEpisode >= episodeDuelCounts.length) return false;
+            const needed = episodeDuelCounts[currentEpisode] || 0;
+            return needed > 0 && duelsInCurrentEpisode >= needed;
+        }
+
+        // Показать самую большую территорию на 5 секунд (оглашение лидера выпуска).
+        // Вызывается ТОЛЬКО по кнопке «Огласить лидера».
+        // Победитель последней дуэли остаётся выбранным после оглашения, чтобы
+        // продолжать игру без повторного выбора.
+        function announceEpisodeLeader() {
+            if (!isCurrentEpisodeFinished()) return;
+            if (episodeHighlightTimeout) clearTimeout(episodeHighlightTimeout);
+            if (gameState === 'episodeHighlight') return;
+
+            // Сохраняем победителя последней дуэли (и его категорию), чтобы вернуть его после оглашения
+            const winnerToKeep = selectedPlayer;
+            const winnerCategoryToKeep = selectedCategory;
+
+            gameState = 'episodeHighlight';
+            clearCategoryRevealTimers();
+            clearBonusControls();
+            updateButtonsState();
+
+            // Находим игроков с наибольшей территорией (лидеров может быть несколько)
+            const players = getAllPlayers();
+            let maxSize = 0;
+            const leaders = [];
+            players.forEach(playerName => {
+                const size = getPlayerCells(playerName).length;
+                if (size > maxSize) {
+                    maxSize = size;
+                    leaders.length = 0;
+                    leaders.push(playerName);
+                } else if (size === maxSize) {
+                    leaders.push(playerName);
+                }
+            });
+
+            // Подсвечиваем всех лидеров золотым
+            leaders.forEach(playerName => {
+                getPlayerCells(playerName).forEach(({ r, c }) => {
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (cellEl) cellEl.classList.add('biggest-territory');
+                });
+            });
+
+            let msg;
+            if (leaders.length === 1) {
+                msg = `🏆 Самая большая территория: ${leaders[0]} (${maxSize} кл.)`;
+            } else {
+                msg = `🏆 Самые большие территории: ${leaders.join(', ')} (${maxSize} кл.)`;
+            }
+            document.getElementById('gameStatus').textContent = msg;
+
+            // Через 5 секунд убираем подсветку и переходим к следующему выпуску.
+            // Победитель последней дуэли остаётся выбранным (контроль над его территорией сохранён).
+            episodeHighlightTimeout = setTimeout(() => {
+                document.querySelectorAll('.biggest-territory').forEach(el => el.classList.remove('biggest-territory'));
+                currentEpisode++;
+                duelsInCurrentEpisode = 0;
+                // Отменять захват можно только в рамках текущего выпуска:
+                // после оглашения лидера и перехода к следующему выпуску снапшот сбрасываем
+                snapshotBeforeCapture = null;
+                updateDuelCounter();
+
+                if (winnerToKeep && getAllPlayers().includes(winnerToKeep)) {
+                    selectedPlayer = winnerToKeep;
+                    selectedCategory = winnerCategoryToKeep || getPlayerCategory(winnerToKeep);
+                    gameState = 'playerSelected';
+                    renderField();
+                    highlightSelectedPlayer(winnerToKeep);
+                    updateManualSelectableCells();
+                    applyBonusHighlights();
+                    updateButtonsState();
+                    document.getElementById('gameStatus').textContent = `Выбран: ${winnerToKeep}`;
+                    if (chooseBonusFor === winnerToKeep) {
+                        renderBonusChoice();
+                    }
+                } else {
+                    gameState = 'idle';
+                    renderField();
+                    updateButtonsState();
+                    document.getElementById('gameStatus').textContent = 'Готов к игре';
+                }
+            }, 5000);
+        }
+
+        // =====================================================================
+        // ЗАГРУЗКА ПОЛЯ ИЗ РЕДАКТОРА
+        // =====================================================================
+
+        function loadGridFromEditor() {
+            grid = [];
+            playerStartCells = {};
+            const inputs = document.querySelectorAll('#fieldEditor input');
+            
+            for (let r = 0; r < fieldRows; r++) {
+                const row = [];
+                for (let c = 0; c < fieldCols; c++) {
+                    const idx = r * fieldCols + c;
+                    const value = inputs[idx].value.trim();
+                    
+                    if (value) {
+                        const parts = value.split(';');
+                        row.push({
+                            player: parts[0] || '',
+                            category: parts[1] || ''
+                        });
+                        
+                        // Запоминаем стартовую клетку игрока (первую встреченную)
+                        const playerName = parts[0] || '';
+                        if (playerName && !(playerName in playerStartCells)) {
+                            playerStartCells[playerName] = { r, c };
+                        }
+                    } else {
+                        row.push({ player: '', category: '' });
+                    }
+                }
+                grid.push(row);
+            }
+        }
+
+        // Получить главную клетку территории игрока (стартовая клетка игрока,
+        // если она всё ещё принадлежит ему; иначе — первая по порядку)
+        function getMainCell(playerName) {
+            const start = playerStartCells[playerName];
+            if (start && grid[start.r] && grid[start.r][start.c] &&
+                grid[start.r][start.c].player === playerName) {
+                return start;
+            }
+            
+            for (let r = 0; r < fieldRows; r++) {
+                for (let c = 0; c < fieldCols; c++) {
+                    if (grid[r][c].player === playerName) {
+                        return { r, c };
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Получить категорию игрока (с его главной клетки)
+        function getPlayerCategory(playerName) {
+            const mainCell = getMainCell(playerName);
+            if (mainCell) {
+                return grid[mainCell.r][mainCell.c].category;
+            }
+            return '';
+        }
+
+        // Проверить, является ли клетка главной для своей территории
+        function isMainCell(r, c) {
+            const playerName = grid[r][c].player;
+            if (!playerName) return false;
+            
+            const mainCell = getMainCell(playerName);
+            return mainCell && mainCell.r === r && mainCell.c === c;
+        }
+
+        function renderField() {
+            const field = document.getElementById('gameField');
+            field.innerHTML = '';
+            field.style.gridTemplateColumns = `repeat(${fieldCols}, 1fr)`;
+
+            for (let r = 0; r < fieldRows; r++) {
+                for (let c = 0; c < fieldCols; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    
+                    const cellData = grid[r][c];
+                    
+                    if (cellData.player) {
+                        // Показываем имя только на главной клетке территории
+                        if (isMainCell(r, c)) {
+                            const playerName = document.createElement('div');
+                            playerName.className = 'player-name';
+                            playerName.textContent = cellData.player;
+                            cell.appendChild(playerName);
+                            
+                            // Категория показывается только при подсветке
+                            if (cellData.category) {
+                                const categoryName = document.createElement('div');
+                                categoryName.className = 'category-name';
+                                categoryName.textContent = cellData.category;
+                                cell.appendChild(categoryName);
+                            }
+                        }
+                        
+                        cell.addEventListener('click', () => onCellClick(r, c));
+                    } else {
+                        cell.classList.add('empty');
+                    }
+                    
+                    field.appendChild(cell);
+                }
+            }
+            
+            applyBonusHighlights();
+            updateBorders();
+            updateManualSelectableCells();
+            updateCellFontSizes();
+        }
+
+        // Размер шрифта имён игроков и названий категорий пропорционален размеру клетки поля.
+        // Для полей 10×10 и больше используем стандартный размер (CSS по умолчанию);
+        // для полей от 2×2 до 9×9 — чем меньше клеток, тем крупнее клетка и тем крупнее шрифт.
+        function updateCellFontSizes() {
+            const field = document.getElementById('gameField');
+            const firstCell = field.querySelector('.cell');
+            if (!firstCell) return;
+
+            if (Math.min(fieldCols, fieldRows) <= 9) {
+                const cellWidth = firstCell.offsetWidth;
+                const playerFont = Math.round(cellWidth * 0.10);
+                const categoryFont = Math.round(cellWidth * 0.078);
+                field.style.setProperty('--player-font-size', playerFont + 'px');
+                field.style.setProperty('--category-font-size', categoryFont + 'px');
+            } else {
+                field.style.removeProperty('--player-font-size');
+                field.style.removeProperty('--category-font-size');
+            }
+        }
+
+        function updateBorders() {
+            const directions = [
+                { dr: -1, dc: 0, border: 'border-top' },
+                { dr: 0, dc: 1, border: 'border-right' },
+                { dr: 1, dc: 0, border: 'border-bottom' },
+                { dr: 0, dc: -1, border: 'border-left' }
+            ];
+            
+            for (let r = 0; r < fieldRows; r++) {
+                for (let c = 0; c < fieldCols; c++) {
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (!cellEl || grid[r][c].player === '') continue;
+                    
+                    // Убираем все границы
+                    cellEl.classList.remove('border-top', 'border-right', 'border-bottom', 'border-left');
+                    
+                    const currentPlayer = grid[r][c].player;
+                    
+                    // Проверяем соседей
+                    directions.forEach(({ dr, dc, border }) => {
+                        const nr = r + dr;
+                        const nc = c + dc;
+                        
+                        if (nr >= 0 && nr < fieldRows && nc >= 0 && nc < fieldCols) {
+                            const neighbor = grid[nr][nc];
+                            if (neighbor.player && neighbor.player !== currentPlayer) {
+                                cellEl.classList.add(border);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        // Обновление клеток, доступных для ручного выбора
+        function updateManualSelectableCells() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('manual-selectable');
+            });
+            
+            if (gameState !== 'selectingPlayer') return;
+            
+            const players = getAllPlayers();
+            players.forEach(playerName => {
+                getPlayerCells(playerName).forEach(({ r, c }) => {
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (cellEl) cellEl.classList.add('manual-selectable');
+                });
+            });
+        }
+
+        function getAllPlayers() {
+            const players = new Set();
+            grid.forEach(row => row.forEach(cell => {
+                if (cell.player) players.add(cell.player);
+            }));
+            return Array.from(players);
+        }
+
+        function getPlayerCells(playerName) {
+            const cells = [];
+            grid.forEach((row, r) => row.forEach((cell, c) => {
+                if (cell.player === playerName) cells.push({ r, c });
+            }));
+            return cells;
+        }
+
+        // =====================================================================
+        // БОНУС ЗА 3 ПОБЕДЫ ПОДРЯД (👑)
+        // =====================================================================
+
+        // Активные территории в текущем состоянии игры (для контекстной подсветки бонуса)
+        function getActivePlayers() {
+            const active = new Set();
+            if (gameState === 'playerSelected' || gameState === 'showingCategories' || gameState === 'selectingWinner') {
+                if (selectedPlayer) active.add(selectedPlayer);
+            }
+            if (gameState === 'showingCategories') {
+                revealedNeighbors.forEach(p => active.add(p));
+            }
+            if (gameState === 'selectingWinner') {
+                if (selectedOpponent) active.add(selectedOpponent);
+            }
+            return active;
+        }
+
+        // Применить золотую подсветку территории игрокам с бонусом.
+        // Территория золотая, только когда она сама активна:
+        // выбрана, показана как сосед или участвует в дуэли.
+        function applyBonusHighlights() {
+            document.querySelectorAll('.bonus-territory').forEach(el => el.classList.remove('bonus-territory'));
+            const active = getActivePlayers();
+            Object.keys(hasBonus).forEach(playerName => {
+                if (!hasBonus[playerName]) return;
+                if (!active.has(playerName)) return;
+                getPlayerCells(playerName).forEach(({ r, c }) => {
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (cellEl) cellEl.classList.add('bonus-territory');
+                });
+            });
+        }
+
+        // Очистить блок кнопок бонуса
+        function clearBonusControls() {
+            const container = document.getElementById('bonusControls');
+            if (container) container.innerHTML = '';
+        }
+
+        // Показать категории всех игроков на их главных клетках территорий
+        // (перед выбором бонуса за 3 победы подряд)
+        function showAllCategories() {
+            document.querySelectorAll('.cell.show-all-categories').forEach(el => el.classList.remove('show-all-categories'));
+            getAllPlayers().forEach(playerName => {
+                const main = getMainCell(playerName);
+                if (!main) return;
+                const el = document.querySelector(`[data-row="${main.r}"][data-col="${main.c}"]`);
+                if (el) el.classList.add('show-all-categories');
+            });
+        }
+
+        // Скрыть категории всех игроков, показанные перед выбором бонуса
+        function hideAllCategories() {
+            document.querySelectorAll('.cell.show-all-categories').forEach(el => el.classList.remove('show-all-categories'));
+        }
+
+        // Показать кнопки бонуса для дуэлянтов, у которых есть активный бонус.
+        // Вызывается при входе в состояние selectingWinner (до выбора победителя).
+        function renderBonusControls() {
+            clearBonusControls();
+            const container = document.getElementById('bonusControls');
+            if (!container) return;
+
+            const duelists = [selectedPlayer, selectedOpponent].filter(Boolean);
+            duelists.forEach(playerName => {
+                if (!hasBonus[playerName]) return;
+                const btn = document.createElement('button');
+                btn.className = 'game-btn btn-bonus';
+                btn.textContent = `⚡ Использовать бонус: ${playerName}`;
+                btn.addEventListener('click', () => useBonus(playerName));
+                container.appendChild(btn);
+            });
+        }
+
+        // Показать выбор бонуса игроку, выигравшему 3 дуэли подряд:
+        // «Золотая территория» или «Обмен категорией»
+        function renderBonusChoice() {
+            clearBonusControls();
+            const container = document.getElementById('bonusControls');
+            if (!container || !chooseBonusFor) return;
+
+            // Перед выбором бонуса показываем все категории на территориях,
+            // чтобы игрок мог решить: обменять свою категорию или оставить территорию
+            showAllCategories();
+
+            // «Золотая территория» предлагается только если у игрока её ещё нет
+            // (бонус уже получен и не потрачен — выбрать её повторно нельзя)
+            if (!hasBonus[chooseBonusFor]) {
+                const btnGolden = document.createElement('button');
+                btnGolden.className = 'game-btn btn-bonus';
+                btnGolden.textContent = '👑 Золотая территория';
+                btnGolden.addEventListener('click', () => chooseGoldenBonus());
+                container.appendChild(btnGolden);
+            }
+
+            const btnExchange = document.createElement('button');
+            btnExchange.className = 'game-btn btn-bonus';
+            btnExchange.textContent = '🔄 Обмен категорией';
+            btnExchange.addEventListener('click', () => chooseCategoryExchange());
+
+            const btnNext = document.createElement('button');
+            btnNext.className = 'game-btn btn-bonus';
+            btnNext.textContent = '🎯 Выбрать следующего игрока';
+            btnNext.addEventListener('click', () => chooseNextPlayer());
+
+            container.appendChild(btnExchange);
+            container.appendChild(btnNext);
+
+            document.getElementById('gameStatus').textContent = `🎁 Бонус за 3 победы: ${chooseBonusFor}! Выберите тип бонуса`;
+        }
+
+        // Игрок выбрал бонус «Золотая территория»: категории, показанные перед выбором, скрываются
+        function chooseGoldenBonus() {
+            if (!chooseBonusFor) return;
+            hasBonus[chooseBonusFor] = true;
+            chooseBonusFor = null;
+            clearBonusControls();
+            hideAllCategories();
+            applyBonusHighlights();
+            document.getElementById('gameStatus').textContent = `👑 ${selectedPlayer} сохранил золотую территорию`;
+        }
+
+        // Игрок выбрал бонус «Обмен категорией»: категории остаются видимыми,
+        // подсвечиваются все оставшиеся территории, клик по одной из них обменяет категории.
+        // Золотая территория сохраняется, если она у игрока уже есть (бонус не потрачен)
+        function chooseCategoryExchange() {
+            if (!chooseBonusFor) return;
+            categoryExchangePlayer = chooseBonusFor;
+            chooseBonusFor = null;
+            clearBonusControls();
+            // Общий показ категорий заменяем подсветкой территорий обмена:
+            // у остальных территорий категории показывает класс category-exchange-target,
+            // а категорию самого игрока оставляем видимой (его категория тоже участвует в обмене)
+            document.querySelectorAll('.cell.show-all-categories').forEach(el => {
+                const isOwnMain = categoryExchangePlayer && isMainCell(parseInt(el.dataset.row, 10), parseInt(el.dataset.col, 10)) &&
+                    grid[parseInt(el.dataset.row, 10)][parseInt(el.dataset.col, 10)].player === categoryExchangePlayer;
+                if (!isOwnMain) el.classList.remove('show-all-categories');
+            });
+            gameState = 'categoryExchange';
+            updateButtonsState();
+            applyBonusHighlights();
+            highlightCategoryExchangeTargets();
+            document.getElementById('gameStatus').textContent = `🔄 ${categoryExchangePlayer}: выберите территорию для обмена категорией`;
+        }
+
+        // Игроки, которых может выбрать обладатель бонуса «Выбрать следующего игрока».
+        // Выбор такой же, как у рандомайзера: если остались одноклеточные территории — только они,
+        // иначе — все игроки. Текущий победитель исключается.
+        function getNextPlayerCandidates() {
+            const players = getAllPlayers().filter(p => p !== chooseNextPlayerFor);
+            const playersWithOneCell = players.filter(p => getPlayerCells(p).length === 1);
+            return playersWithOneCell.length > 0 ? playersWithOneCell : players;
+        }
+
+        // Игрок выбрал бонус «Выбрать следующего игрока»: категории, показанные перед выбором, скрываются,
+        // подсвечиваются доступные игроки, по полю начинает двигаться мишень.
+        // Золотая территория сохраняется, если она у игрока уже есть (бонус не потрачен)
+        function chooseNextPlayer() {
+            if (!chooseBonusFor) return;
+            chooseNextPlayerFor = chooseBonusFor;
+            chooseBonusFor = null;
+            clearBonusControls();
+            hideAllCategories();
+            gameState = 'chooseNextPlayer';
+            updateButtonsState();
+            applyBonusHighlights();
+            highlightNextPlayerTargets();
+            startNextPlayerTarget();
+            document.getElementById('gameStatus').textContent = `🎯 ${chooseNextPlayerFor}: выберите следующего игрока, который будет выбирать себе оппонента`;
+        }
+
+        // Подсветить игроков, доступных для выбора следующим атакующим (только кандидаты)
+        function highlightNextPlayerTargets() {
+            document.querySelectorAll('.next-player-target').forEach(el => el.classList.remove('next-player-target'));
+            const candidates = getNextPlayerCandidates();
+            candidates.forEach(playerName => {
+                getPlayerCells(playerName).forEach(({ r, c }) => {
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (cellEl) cellEl.classList.add('next-player-target');
+                });
+            });
+        }
+
+        // Таймеры и состояние мишени (чтобы можно было останавливать)
+        let nextPlayerTargetInterval = null;
+        let nextPlayerTargetTimeout = null;
+
+        // Позиционировать мишень по конкретной клетке поля (учитывая смещение .field-wrap и padding поля)
+        function positionReticleOnCell(r, c) {
+            const reticle = document.getElementById('bonusTargetReticle');
+            const wrap = document.querySelector('.field-wrap');
+            const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+            if (!reticle || !wrap || !cellEl) return;
+
+            const wrapRect = wrap.getBoundingClientRect();
+            const cellRect = cellEl.getBoundingClientRect();
+
+            reticle.style.width = `${cellRect.width}px`;
+            reticle.style.height = `${cellRect.height}px`;
+            reticle.style.left = `${cellRect.left - wrapRect.left}px`;
+            reticle.style.top = `${cellRect.top - wrapRect.top}px`;
+        }
+
+        // Скрыть мишень
+        function hideReticle() {
+            const reticle = document.getElementById('bonusTargetReticle');
+            if (reticle) {
+                reticle.style.display = 'none';
+            }
+        }
+
+        // Запустить движение мишени: каждую секунду (1000 мс) мишень плавно останавливается
+        // у случайной клетки случайного доступного кандидата, двигаясь между позициями.
+        // Старт — с территории игрока, получившего бонус.
+        function startNextPlayerTarget() {
+            const reticle = document.getElementById('bonusTargetReticle');
+            if (!reticle) return;
+            const candidates = getNextPlayerCandidates();
+            if (candidates.length === 0) {
+                hideReticle();
+                return;
+            }
+
+            // Ставим мишень на главную клетку территории игрока с бонусом и показываем её
+            const bonusMain = getMainCell(chooseNextPlayerFor);
+            if (bonusMain) {
+                positionReticleOnCell(bonusMain.r, bonusMain.c);
+            }
+            reticle.style.display = 'block';
+
+            // Звук процесса выбора следующего игрока
+            playNextPlayerSound();
+
+            // Плавное движение каждые 1000 мс к случайной клетке случайного кандидата
+            nextPlayerTargetInterval = setInterval(() => {
+                const currentCandidates = getNextPlayerCandidates();
+                if (currentCandidates.length === 0) {
+                    stopNextPlayerTarget();
+                    return;
+                }
+                const player = currentCandidates[Math.floor(Math.random() * currentCandidates.length)];
+                const playerCells = getPlayerCells(player);
+                const cell = playerCells[Math.floor(Math.random() * playerCells.length)];
+                if (cell) {
+                    positionReticleOnCell(cell.r, cell.c);
+                }
+            }, 1000);
+        }
+
+        // Остановить движение мишени и скрыть её
+        function stopNextPlayerTarget() {
+            if (nextPlayerTargetInterval) {
+                clearInterval(nextPlayerTargetInterval);
+                nextPlayerTargetInterval = null;
+            }
+            if (nextPlayerTargetTimeout) {
+                clearTimeout(nextPlayerTargetTimeout);
+                nextPlayerTargetTimeout = null;
+            }
+            hideReticle();
+        }
+
+        // Направить мишень на выбранного игрока.
+        // После завершения перехода вызывается callback (в нём запускается вспышка на перерисованном поле).
+        function animateReticleToPlayer(playerName, callback) {
+            const reticle = document.getElementById('bonusTargetReticle');
+            if (!reticle) {
+                if (callback) callback();
+                return;
+            }
+
+            // Останавливаем случайное движение мишени
+            if (nextPlayerTargetInterval) {
+                clearInterval(nextPlayerTargetInterval);
+                nextPlayerTargetInterval = null;
+            }
+
+            // Направляем мишень на главную клетку территории выбранного игрока
+            const mainCell = getMainCell(playerName);
+            if (mainCell) {
+                positionReticleOnCell(mainCell.r, mainCell.c);
+            }
+            reticle.style.display = 'block';
+
+            // После завершения перехода (0.9 с) прячем мишень и вызываем callback
+            nextPlayerTargetTimeout = setTimeout(() => {
+                hideReticle();
+                if (callback) callback();
+            }, 900);
+        }
+
+        // Назначить выбранного игрока следующим атакующим (вместо рандомайзера)
+        function selectNextPlayer(playerName) {
+            document.querySelectorAll('.next-player-target').forEach(el => el.classList.remove('next-player-target'));
+            // Мишень направляется к выбранному игроку, затем завершение выбора
+            animateReticleToPlayer(playerName, () => {
+                selectedPlayer = playerName;
+                selectedCategory = getPlayerCategory(playerName);
+                chooseNextPlayerFor = null;
+                gameState = 'playerSelected';
+                updateButtonsState();
+                renderField();
+                highlightSelectedPlayer(playerName);
+                updateManualSelectableCells();
+                applyBonusHighlights();
+                document.getElementById('gameStatus').textContent = `🎯 Выбран: ${playerName}`;
+                // Вспышка волной от территории выбранного игрока — уже после перерисовки поля,
+                // чтобы она была видна на актуальных клетках (как при выборе рандомайзером)
+                runWhiteFlashWave(getPlayerCells(playerName));
+                // Звук: следующий игрок выбран
+                playNextPlayerSelectedSound();
+            });
+        }
+
+        // Подсветить все территории других игроков как доступные для обмена категорией
+        function highlightCategoryExchangeTargets() {
+            document.querySelectorAll('.category-exchange-target').forEach(el => el.classList.remove('category-exchange-target'));
+            const players = getAllPlayers();
+            players.forEach(playerName => {
+                if (playerName === categoryExchangePlayer) return;
+                getPlayerCells(playerName).forEach(({ r, c }) => {
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (cellEl) cellEl.classList.add('category-exchange-target');
+                });
+            });
+        }
+
+        // Выполнить обмен категориями между двумя игроками (с анимацией)
+        // Вспышка, распространяющаяся волной по ВСЕМУ полю от главной клетки территории
+        // (как при выборе игрока рандомайзером). Волна идёт от главной клетки участника:
+        // сначала его территория, затем дальше по соседям на всё поле.
+        function flashWholeFieldWave(playerName) {
+            const main = getMainCell(playerName);
+            if (!main) return;
+
+            // BFS по полю от главной клетки территории
+            const queue = [{ r: main.r, c: main.c, dist: 0 }];
+            const visited = new Set([`${main.r},${main.c}`]);
+            const ordered = [];
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+            while (queue.length > 0) {
+                const { r, c, dist } = queue.shift();
+                ordered.push({ r, c, dist });
+                directions.forEach(([dr, dc]) => {
+                    const nr = r + dr, nc = c + dc;
+                    const key = `${nr},${nc}`;
+                    if (nr < 0 || nr >= fieldRows || nc < 0 || nc >= fieldCols) return;
+                    if (visited.has(key)) return;
+                    visited.add(key);
+                    // Волна распространяется только по занятым клеткам поля
+                    if (grid[nr][nc].player) {
+                        queue.push({ r: nr, c: nc, dist: dist + 1 });
+                    }
+                });
+            }
+
+            ordered.forEach(({ r, c, dist }) => {
+                const el = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (!el) return;
+                const delay = dist * 45;
+                setTimeout(() => {
+                    el.classList.remove('white-flash');
+                    void el.offsetWidth;
+                    el.classList.add('white-flash');
+                    setTimeout(() => el.classList.remove('white-flash'), 500);
+                }, delay);
+            });
+        }
+
+        // Обновить текст категории на главной клетке территории
+        function setCategoryText(playerName, text) {
+            const main = getMainCell(playerName);
+            if (!main) return;
+            const el = document.querySelector(`[data-row="${main.r}"][data-col="${main.c}"]`);
+            if (!el) return;
+            const catEl = el.querySelector('.category-name');
+            if (catEl) catEl.textContent = text;
+        }
+
+        function exchangeCategory(playerA, playerB) {
+            const catA = getPlayerCategory(playerA);
+            const catB = getPlayerCategory(playerB);
+
+            // Блокируем повторные клики во время анимации
+            gameState = 'categoryExchangeAnimating';
+            updateButtonsState();
+
+            // Звук процесса обмена категорией
+            playCategoryExchangeSound();
+
+            // Затемняем все территории, кроме участников обмена, и снимаем с них
+            // голубую подсветку — внимание сосредоточено на двух территориях
+            const participants = new Set([playerA, playerB]);
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('category-exchange-target');
+                cell.classList.remove('category-exchange-active');
+                cell.classList.remove('exchange-dimmed');
+            });
+            getAllPlayers().forEach(playerName => {
+                if (participants.has(playerName)) return;
+                getPlayerCells(playerName).forEach(({ r, c }) => {
+                    const el = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    if (el) el.classList.add('exchange-dimmed');
+                });
+            });
+
+            // Показываем категории только у участников обмена (остальные скрываем)
+            getPlayerCells(playerA).forEach(({ r, c }) => {
+                const el = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (el) el.classList.add('category-exchange-active');
+            });
+            getPlayerCells(playerB).forEach(({ r, c }) => {
+                const el = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (el) el.classList.add('category-exchange-active');
+            });
+
+            // Хелпер: применить класс к категории на главной клетке территории
+            const applyToCategory = (playerName, cls, removeCls) => {
+                const main = getMainCell(playerName);
+                if (!main) return;
+                const el = document.querySelector(`[data-row="${main.r}"][data-col="${main.c}"]`);
+                if (!el) return;
+                const catEl = el.querySelector('.category-name');
+                if (!catEl) return;
+                if (removeCls) catEl.classList.remove(removeCls);
+                catEl.classList.add(cls);
+            };
+
+            // 1. Пауза 1 секунду: поле затемнено, видны только участники обмена.
+            //    Затем — вспышка волной по всему полю от территории «жертвы» (B)
+            setTimeout(() => {
+                flashWholeFieldWave(playerB);
+            }, 1250);
+
+            // 2. Категория «жертвы» засасывается в вакуум (только текст)
+            setTimeout(() => {
+                applyToCategory(playerB, 'category-vacuum-suck');
+            }, 2125);
+
+            // 3. Вспышка волной по всему полю от территории обладателя бонуса (A)
+            setTimeout(() => {
+                flashWholeFieldWave(playerA);
+            }, 3375);
+
+            // 4. Категория обладателя бонуса тоже засасывается в вакуум
+            setTimeout(() => {
+                applyToCategory(playerA, 'category-vacuum-suck');
+            }, 4250);
+
+            // 5. Категория «жертвы» появляется у обладателя бонуса,
+            //    а категория обладателя — у «жертвы»
+            setTimeout(() => {
+                // У обладателя (A): убрать вакуум, показать catB с эффектом появления
+                applyToCategory(playerA, 'category-arrive', 'category-vacuum-suck');
+                setCategoryText(playerA, catB);
+                // У «жертвы» (B): убрать вакуум, показать catA с эффектом появления
+                applyToCategory(playerB, 'category-arrive', 'category-vacuum-suck');
+                setCategoryText(playerB, catA);
+
+                // Снимаем классы появления через время
+                setTimeout(() => {
+                    applyToCategory(playerA, '', 'category-arrive');
+                    applyToCategory(playerB, '', 'category-arrive');
+                }, 1250);
+            }, 5000);
+
+            // 6. Применяем смену категорий в данных, перерисовываем поле
+            setTimeout(() => {
+                getPlayerCells(playerA).forEach(({ r, c }) => { grid[r][c].category = catB; });
+                getPlayerCells(playerB).forEach(({ r, c }) => { grid[r][c].category = catA; });
+
+                categoryExchangePlayer = null;
+                document.querySelectorAll('.category-exchange-target').forEach(el => el.classList.remove('category-exchange-target'));
+                document.querySelectorAll('.category-exchange-active').forEach(el => el.classList.remove('category-exchange-active'));
+                document.querySelectorAll('.exchange-dimmed').forEach(el => el.classList.remove('exchange-dimmed'));
+
+                // Возвращаемся к обычному ходу: игрок остаётся выбранным
+                selectedCategory = getPlayerCategory(playerA);
+                gameState = 'playerSelected';
+                updateButtonsState();
+                renderField();
+                highlightSelectedPlayer(playerA);
+                updateManualSelectableCells();
+                applyBonusHighlights();
+                document.getElementById('gameStatus').textContent = `🔄 Категории обменяны: ${playerA} ↔ ${playerB}`;
+            }, 6500);
+        }
+
+        // Использовать бонус игрока: бонус исчезает, золотая подсветка снимается.
+        // Серия побед при этом НЕ сбрасывается: счётчик продолжает расти,
+        // и на каждой кратной трём победе игрок снова получает выбор бонуса
+        function useBonus(playerName) {
+            if (!hasBonus[playerName]) return;
+            hasBonus[playerName] = false;
+            bonusUsedThisDuel[playerName] = true;
+            applyBonusHighlights();
+            renderBonusControls();
+            document.getElementById('gameStatus').textContent = `⚡ Бонус использован: ${playerName}`;
+        }
+
+        // Учесть результат дуэли для подсчёта серий побед и бонусов
+        function updateStreaks(winner, loser) {
+            // Победитель: серия побед растёт всегда и не сбрасывается посреди серии.
+            // Когда счётчик становится кратен трём (3, 6, 9... побед подряд),
+            // игроку снова предлагается выбор бонуса:
+            // если у него нет золотой территории — все три бонуса,
+            // если есть — только обмен категорией и выбор следующего игрока.
+            winStreaks[winner] = (winStreaks[winner] || 0) + 1;
+            if (winStreaks[winner] % 3 === 0) {
+                chooseBonusFor = winner;
+            }
+            // Проигравший: серия сбрасывается, бонус исчезает вместе с территорией
+            winStreaks[loser] = 0;
+            hasBonus[loser] = false;
+        }
+
+        // Сбросить серии побед и бонусы (при старте новой игры)
+        function resetStreaks() {
+            winStreaks = {};
+            hasBonus = {};
+            bonusUsedThisDuel = {};
+            chooseBonusFor = null;
+            categoryExchangePlayer = null;
+            chooseNextPlayerFor = null;
+            revealedNeighbors.clear();
+            finalState = null;
+            stopNextPlayerTarget();
+            clearBonusControls();
+        }
+
+        // Сбросить только серии побед при возврате на поле.
+        // Уже полученные бонусы (hasBonus) сохраняются до траты или выбывания игрока.
+        function resetWinStreaks() {
+            winStreaks = {};
+            bonusUsedThisDuel = {};
+            chooseBonusFor = null;
+            categoryExchangePlayer = null;
+            chooseNextPlayerFor = null;
+            stopNextPlayerTarget();
+            clearBonusControls();
+        }
+
+        // Получить соседние территории (по имени игрока)
+        function getNeighboringTerritories(playerName) {
+            const myCells = getPlayerCells(playerName);
+            const neighborPlayers = new Set();
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            
+            // Сначала находим всех соседних игроков
+            myCells.forEach(({ r, c }) => {
+                directions.forEach(([dr, dc]) => {
+                    const nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < fieldRows && nc >= 0 && nc < fieldCols) {
+                        const cell = grid[nr][nc];
+                        if (cell.player && cell.player !== playerName) {
+                            neighborPlayers.add(cell.player);
+                        }
+                    }
+                });
+            });
+            
+            // Теперь для каждого соседнего игрока получаем ВСЕ его клетки
+            const neighbors = new Map();
+            neighborPlayers.forEach(neighborName => {
+                neighbors.set(neighborName, getPlayerCells(neighborName));
+            });
+            
+            return neighbors;
+        }
+
+        // Игроки, которые могут быть выбраны рандомайзером:
+        // если остались одноклеточные территории — только они, иначе — все игроки
+        function getRandomizerCandidates() {
+            const players = getAllPlayers();
+            const playersWithOneCell = players.filter(p => getPlayerCells(p).length === 1);
+            return playersWithOneCell.length > 0 ? playersWithOneCell : players;
+        }
+
+        function selectRandomPlayer() {
+            const candidates = getRandomizerCandidates();
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        // Обновление состояния кнопок
+        function updateButtonsState() {
+            const isIdle = gameState === 'idle';
+            const isPlayerSelected = gameState === 'playerSelected';
+            const isSelectingPlayer = gameState === 'selectingPlayer';
+            const isShowingCategories = gameState === 'showingCategories';
+            const isSelectingWinner = gameState === 'selectingWinner';
+            const isCategoryExchange = gameState === 'categoryExchange';
+            const isCategoryExchangeAnimating = gameState === 'categoryExchangeAnimating';
+            const isChooseNextPlayer = gameState === 'chooseNextPlayer';
+            const isFinalOrderChoice = gameState === 'finalOrderChoice';
+            const isShowingAllCategories = gameState === 'showingAllCategories';
+            const isAllCategoriesShown = gameState === 'allCategoriesShown';
+            const isGameOver = gameState === 'gameOver';
+            // Пока выпуск завершён, но лидер ещё не оглашён — все остальные кнопки заблокированы.
+            // «Отменить захват» остаётся доступной, чтобы можно было исправить результат
+            // последней дуэли (в этом случае выпуск снова станет незавершённым).
+            const isAwaitingLeaderAnnounce = isCurrentEpisodeFinished() && !gameOver && gameState !== 'episodeHighlight';
+            
+            document.getElementById('randomizerBtn').disabled = !isIdle || gameOver || isAwaitingLeaderAnnounce;
+            document.getElementById('manualBtn').disabled = !isIdle || gameOver || isAwaitingLeaderAnnounce;
+            // Кнопка показа/скрытия всех категорий: доступна только в исходном состоянии,
+            // во время последовательного показа и пока категории не скрыты
+            const showAllCategoriesBtn = document.getElementById('showAllCategoriesBtn');
+            if (showAllCategoriesBtn) {
+                showAllCategoriesBtn.disabled = !(isIdle || isShowingAllCategories || isAllCategoriesShown) || isAwaitingLeaderAnnounce;
+                showAllCategoriesBtn.textContent = (isShowingAllCategories || isAllCategoriesShown)
+                    ? '📋 Скрыть все категории'
+                    : '📋 Показать все категории';
+            }
+            document.getElementById('showCategoriesBtn').disabled = !isPlayerSelected || isAwaitingLeaderAnnounce;
+            document.getElementById('undoCaptureBtn').disabled = !(snapshotBeforeCapture && !gameOver && gameState !== 'episodeHighlight');
+            
+            // Кнопка «Огласить лидера» активна только после завершения текущего выпуска
+            const leaderBtn = document.getElementById('announceLeaderBtn');
+            if (leaderBtn) {
+                leaderBtn.disabled = !isCurrentEpisodeFinished() || gameState === 'episodeHighlight' || gameOver;
+            }
+            
+            // Кнопка "Вернуться на поле" активна во всех промежуточных состояниях выбора
+            let canGoBack = isPlayerSelected || isSelectingPlayer || isShowingCategories || isSelectingWinner || isCategoryExchange || isChooseNextPlayer || isFinalOrderChoice;
+            if (isGameOver) {
+                canGoBack = true;
+            }
+            if (isCategoryExchangeAnimating) {
+                canGoBack = false;
+            }
+            document.getElementById('backToFieldBtn').disabled = !canGoBack || isAwaitingLeaderAnnounce;
+            
+            // Визуальная индикация активного режима ручного выбора
+            if (isSelectingPlayer) {
+                document.getElementById('manualBtn').classList.add('active');
+            } else {
+                document.getElementById('manualBtn').classList.remove('active');
+            }
+        }
+
+        function startRandomizer() {
+            if (gameState !== 'idle') return;
+            if (isCurrentEpisodeFinished() && gameState !== 'episodeHighlight') return;
+            
+            gameState = 'randomizing';
+            updateButtonsState();
+            document.getElementById('gameStatus').textContent = '🎲 Рандомайзер...';
+            
+            playRandomizerMusic();
+            
+            // Игроки-кандидаты и режим мигания
+            const candidates = getRandomizerCandidates();
+            const hasSingleCells = candidates.some(p => getPlayerCells(p).length === 1);
+            
+            // Если остались одноклеточные территории — мигаем отдельными клетками (только их)
+            const singleCells = [];
+            if (hasSingleCells) {
+                candidates.forEach(playerName => {
+                    getPlayerCells(playerName).forEach(({ r, c }) => singleCells.push({ r, c }));
+                });
+            }
+            
+            let elapsed = 0;
+            const interval = setInterval(() => {
+                // За 800 мс до окончательного выбора новые мигания не запускаются,
+                // но уже начавшиеся вспышки догорают естественно
+                if (elapsed >= 9700 - 800) {
+                    elapsed += 100;
+                    if (elapsed >= 9700) {
+                        clearInterval(interval);
+                        const player = selectRandomPlayer();
+                        selectPlayer(player, true);
+                    }
+                    return;
+                }
+                
+                if (hasSingleCells && singleCells.length > 0) {
+                    // Режим одноклеточных территорий: мигаем по одной клетке
+                    const { r, c } = singleCells[Math.floor(Math.random() * singleCells.length)];
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    
+                    if (cellEl) {
+                        cellEl.classList.add('flashing');
+                        setTimeout(() => cellEl.classList.remove('flashing'), 450);
+                    }
+                } else if (candidates.length > 0) {
+                    // Режим территорий: мигает целая территория случайного игрока
+                    const playerName = candidates[Math.floor(Math.random() * candidates.length)];
+                    getPlayerCells(playerName).forEach(({ r, c }) => {
+                        const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        if (cellEl) {
+                            cellEl.classList.add('flashing');
+                            setTimeout(() => cellEl.classList.remove('flashing'), 450);
+                        }
+                    });
+                }
+                
+                elapsed += 100;
+                if (elapsed >= 9700) {
+                    clearInterval(interval);
+                    const player = selectRandomPlayer();
+                    selectPlayer(player, true);
+                }
+            }, 100);
+        }
+
+        // Начало ручного выбора игрока
+        function startManualSelection() {
+            if (gameState !== 'idle') return;
+            if (isCurrentEpisodeFinished() && gameState !== 'episodeHighlight') return;
+            
+            gameState = 'selectingPlayer';
+            updateButtonsState();
+            updateManualSelectableCells();
+            document.getElementById('gameStatus').textContent = '👤 Кликните по игроку, чтобы выбрать его';
+        }
+
+        // Белая вспышка, пробегающая волной по полю от выбранной территории
+        function runWhiteFlashWave(cells) {
+            // BFS от выбранной территории: определяем дистанцию каждой клетки поля
+            const queue = cells.map(({ r, c }) => ({ r, c, dist: 0 }));
+            const visited = new Set(cells.map(({ r, c }) => `${r},${c}`));
+            const distances = [];
+            
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            
+            while (queue.length > 0) {
+                const { r, c, dist } = queue.shift();
+                distances.push({ r, c, dist });
+                
+                directions.forEach(([dr, dc]) => {
+                    const nr = r + dr, nc = c + dc;
+                    const key = `${nr},${nc}`;
+                    if (nr < 0 || nr >= fieldRows || nc < 0 || nc >= fieldCols) return;
+                    if (visited.has(key)) return;
+                    visited.add(key);
+                    if (grid[nr][nc].player) {
+                        queue.push({ r: nr, c: nc, dist: dist + 1 });
+                    }
+                });
+            }
+            
+            // Запускаем вспышку с задержкой, пропорциональной дистанции от выбранной территории
+            distances.forEach(({ r, c, dist }) => {
+                const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (!cellEl) return;
+                const delay = dist * 45;
+                setTimeout(() => {
+                    cellEl.classList.remove('white-flash');
+                    // Перезапуск анимации
+                    void cellEl.offsetWidth;
+                    cellEl.classList.add('white-flash');
+                    // Удаляем класс после завершения анимации, чтобы он не блокировал анимацию захвата (capturing)
+                    setTimeout(() => cellEl.classList.remove('white-flash'), 500);
+                }, delay);
+            });
+        }
+
+        // Выбор игрока (общая логика для рандомайзера и ручного выбора)
+        function selectPlayer(player, isRandom) {
+            selectedPlayer = player;
+            selectedCategory = getPlayerCategory(player); // Сохраняем категорию атакующего
+            highlightSelectedPlayer(player);
+            // При окончательном выборе игрока мгновенно снимаем свечение со всех клеток
+            document.querySelectorAll('.flashing').forEach(el => el.classList.remove('flashing'));
+            // Звук «Выбор игрока» играет только при ручном выборе:
+            // при финальном выборе рандомайзером звук не воспроизводится
+            if (!isRandom) {
+                playPlayerSelectedSound();
+            }
+            gameState = 'playerSelected';
+            updateButtonsState();
+            updateManualSelectableCells();
+            applyBonusHighlights();
+            document.getElementById('gameStatus').textContent = `Выбран: ${player}`;
+            
+            // При выборе рандомайзером — белая вспышка по полю от территории игрока
+            if (isRandom) {
+                runWhiteFlashWave(getPlayerCells(player));
+            }
+        }
+
+        function highlightSelectedPlayer(playerName) {
+            document.querySelectorAll('.cell').forEach(cell => cell.classList.remove('selected-player'));
+            getPlayerCells(playerName).forEach(({ r, c }) => {
+                const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                cellEl.classList.add('selected-player');
+            });
+        }
+
+        // Остановить последовательный показ категорий (если он идёт)
+        function clearCategoryRevealTimers() {
+            categoryRevealTimers.forEach(timer => clearTimeout(timer));
+            categoryRevealTimers = [];
+            // Зацикленный звук показа категорий больше не нужен — глушим его
+            stopCategoryRevealLoopSound();
+        }
+
+        // Показать территории соседей по одной каждые 300 мс (каждая территория целиком).
+        // Звук показа играёт один раз (зацикленно) с первой категории и отключается,
+        // когда все категории показаны — вместо него воспроизводится звук завершения.
+        function revealNeighborTerritories(territories) {
+            clearCategoryRevealTimers();
+            revealedNeighbors.clear();
+
+            territories.forEach(({ player, cells: territoryCells }, index) => {
+                const timer = setTimeout(() => {
+                    territoryCells.forEach(({ r, c }) => {
+                        const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        if (cellEl) {
+                            cellEl.classList.add('neighbor-highlight');
+                        }
+                    });
+                    revealedNeighbors.add(player);
+                    applyBonusHighlights();
+                    // Звук показа запускаем только на первой категории
+                    if (index === 0) {
+                        startCategoryRevealLoopSound();
+                    }
+                    // Когда показана последняя категория — глушим звук показа
+                    // и сразу играем звук завершения показа
+                    if (index === territories.length - 1) {
+                        stopCategoryRevealLoopSound();
+                        playCategoryRevealEndSound();
+                    }
+                }, index * 300);
+                categoryRevealTimers.push(timer);
+            });
+        }
+
+        // =====================================================================
+        // ФИНАЛ: ДУЭЛИ В ОБОИХ КАТЕГОРИЯХ + БОНУСНАЯ КАТЕГОРИЯ
+        // =====================================================================
+
+        // Финальный режим активен, когда на поле осталось ровно 2 игрока
+        // (независимо от того, задана ли бонусная категория)
+        function isFinalDuelMode() {
+            return getAllPlayers().length === 2;
+        }
+
+        // Начало финала: предложить выбрать, какая из двух категорий будет первой.
+        // Если бонусной категории нет — финал состоит из одной дуэли, и её победитель
+        // сразу выигрывает игру. Если бонусная категория есть — при счёте 1:1
+        // проводится решающая дуэль в бонусной категории.
+        function startFinalOrderChoice() {
+            finalState = {
+                stage: 'orderChoice',
+                players: [selectedPlayer, selectedOpponent],
+                scores: {},
+                round: 0,
+                firstCategoryOwner: null
+            };
+            gameState = 'finalOrderChoice';
+            updateButtonsState();
+
+            clearBonusControls();
+            const container = document.getElementById('bonusControls');
+            if (container) {
+                finalState.players.forEach(owner => {
+                    const btn = document.createElement('button');
+                    btn.className = 'game-btn btn-bonus';
+                    btn.textContent = bonusCategory
+                        ? `⚔️ Дуэль 1: «${getPlayerCategory(owner)}» (${owner})`
+                        : `⚔️ Решающая дуэль: «${getPlayerCategory(owner)}» (${owner})`;
+                    btn.addEventListener('click', () => beginFinalDuel(owner));
+                    container.appendChild(btn);
+                });
+            }
+            document.getElementById('gameStatus').textContent = bonusCategory
+                ? '🏁 Финал! Выберите, какая категория будет первой'
+                : '🏁 Финал! Выберите категорию решающей дуэли — её победитель выигрывает игру';
+        }
+
+        // Порядок категорий выбран: начинается первая дуэль
+        function beginFinalDuel(firstOwner) {
+            if (!finalState || finalState.stage !== 'orderChoice') return;
+            clearBonusControls();
+            finalState.firstCategoryOwner = firstOwner;
+            startFinalDuelRound(firstOwner, 1);
+        }
+
+        // Начать раунд финала: атакует владелец категории раунда
+        // (в решающем раунде категория общая — бонусная)
+        function startFinalDuelRound(attacker, round) {
+            finalState.round = round;
+            finalState.stage = (round === 3) ? 'bonusDuel' : 'duel';
+            selectedPlayer = attacker;
+            selectedCategory = (round === 3) ? bonusCategory : getPlayerCategory(attacker);
+            selectedOpponent = finalState.players.find(p => p !== attacker);
+
+            gameState = 'selectingWinner';
+            updateButtonsState();
+            document.querySelectorAll('.selectable-winner').forEach(el => el.classList.remove('selectable-winner'));
+            highlightBothPlayers(selectedPlayer, selectedOpponent);
+            applyBonusHighlights();
+            renderBonusControls();
+            const label = (round === 3)
+                ? `🏁 Решающая дуэль в бонусной категории: «${bonusCategory}»`
+                : `⚔️ Дуэль ${round}: «${selectedCategory}» (${attacker}) — выберите победителя`;
+            document.getElementById('gameStatus').textContent = label;
+        }
+
+        // Обработка результата раунда финала (без захвата территории:
+        // территория переходит только к победителю всего финала)
+        function handleFinalDuelResult(winner) {
+            const loser = winner === selectedPlayer ? selectedOpponent : selectedPlayer;
+            finalState.scores[winner] = (finalState.scores[winner] || 0) + 1;
+            document.querySelectorAll('.selectable-winner').forEach(el => el.classList.remove('selectable-winner'));
+            clearBonusControls();
+
+            const isBonusRound = finalState.stage === 'bonusDuel';
+            const winnerWins = finalState.scores[winner];
+
+            // Победитель финала определён: 2:0 по раундам, победа в бонусной дуэли
+            // или победа в единственной дуэли, когда бонусной категории нет.
+            // Захват территории проводится как обычно, после него игра завершается.
+            if (isBonusRound || winnerWins === 2 || (!bonusCategory && winnerWins === 1)) {
+                finalState = null;
+                gameState = 'capturing';
+                updateButtonsState();
+                captureTerritory(winner, loser);
+                return;
+            }
+
+            // Счёт стал 1:0 или 1:1 — показываем счёт и запускаем следующий раунд
+            const [p1, p2] = finalState.players;
+            const s1 = finalState.scores[p1] || 0;
+            const s2 = finalState.scores[p2] || 0;
+            gameState = 'capturing'; // пауза: блокируем клики между раундами
+            updateButtonsState();
+            document.getElementById('gameStatus').textContent = `📊 Счёт: ${p1} ${s1} : ${s2} ${p2}`;
+
+            setTimeout(() => {
+                if (!finalState) return; // финал был прерван («Вернуться на поле»)
+                if (finalState.round === 1) {
+                    // Вторая дуэль — в категории второго игрока
+                    const secondOwner = finalState.players.find(p => p !== finalState.firstCategoryOwner);
+                    startFinalDuelRound(secondOwner, 2);
+                } else {
+                    // 1:1 — решающая дуэль в бонусной категории
+                    startFinalDuelRound(finalState.players[0], 3);
+                }
+            }, 2000);
+        }
+
+        function showCategories() {
+            if (gameState !== 'playerSelected' || !selectedPlayer) return;
+            if (isCurrentEpisodeFinished() && gameState !== 'episodeHighlight') return;
+            
+            gameState = 'showingCategories';
+            updateButtonsState();
+            document.getElementById('gameStatus').textContent = 'Выберите территорию соперника';
+            
+            const neighbors = getNeighboringTerritories(selectedPlayer);
+            
+            // Собираем территории соседей (каждая территория подсвечивается целиком)
+            const neighborTerritories = [];
+            neighbors.forEach((cells, opponentName) => {
+                neighborTerritories.push({ player: opponentName, cells });
+            });
+            revealNeighborTerritories(neighborTerritories);
+        }
+
+        // =====================================================================
+        // ПОКАЗ ВСЕХ КАТЕГОРИЙ В НАЧАЛЕ ИГРЫ (перед первым выбором игрока)
+        // =====================================================================
+
+        // Общая длительность показа всех категорий (независимо от их количества)
+        const SHOW_ALL_CATEGORIES_TOTAL_MS = 9500;
+
+        // Показать все категории на главных клетках территорий.
+        // Процесс тот же, что при показе соседних категорий (revealNeighborTerritories):
+        // территории подсвечиваются по одной целиком, играет зацикленный звук показа,
+        // в конце — звук завершения. Отличие: весь процесс занимает ровно 9500 мс,
+        // поэтому интервал между показами = 9500 / количество категорий.
+        // После завершения показа категории остаются на экране до нажатия кнопки скрытия.
+        function showAllCategoriesIntro() {
+            gameState = 'showingAllCategories';
+            updateButtonsState();
+            document.getElementById('gameStatus').textContent = '📋 Показ всех категорий на поле...';
+
+            // Собираем территории всех игроков (в порядке обхода поля)
+            const allTerritories = getAllPlayers().map(playerName => ({
+                player: playerName,
+                cells: getPlayerCells(playerName)
+            }));
+
+            // Интервал между показами: общая длительность делится поровну
+            const total = SHOW_ALL_CATEGORIES_TOTAL_MS;
+            const interval = allTerritories.length > 0 ? total / allTerritories.length : total;
+
+            allTerritories.forEach(({ player, cells: territoryCells }, index) => {
+                const delay = Math.round(index * interval);
+                const timer = setTimeout(() => {
+                    // Если показ был прерван (например, «Вернуться на поле») — не подсвечиваем
+                    if (gameState !== 'showingAllCategories') return;
+                    territoryCells.forEach(({ r, c }) => {
+                        const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        if (cellEl) {
+                            cellEl.classList.add('neighbor-highlight');
+                        }
+                    });
+                    revealedNeighbors.add(player);
+                    applyBonusHighlights();
+                    // Звук показа запускаем только на первой категории
+                    if (index === 0) {
+                        startCategoryRevealLoopSound();
+                    }
+                    // Когда показана последняя категория — глушим звук показа,
+                    // играем звук завершения показа и меняем кнопку на «Скрыть»
+                    if (index === allTerritories.length - 1) {
+                        stopCategoryRevealLoopSound();
+                        playCategoryRevealEndSound();
+                        gameState = 'allCategoriesShown';
+                        updateButtonsState();
+                        document.getElementById('gameStatus').textContent = '📋 Все категории показаны';
+                    }
+                }, delay);
+                categoryRevealTimers.push(timer);
+            });
+        }
+
+        // Скрыть все категории, показанные в начале игры, и вернуть поле в исходное состояние
+        function hideAllCategoriesIntro() {
+            clearCategoryRevealTimers();
+            document.querySelectorAll('.neighbor-highlight').forEach(el => el.classList.remove('neighbor-highlight'));
+            revealedNeighbors.clear();
+            gameState = 'idle';
+            updateButtonsState();
+            updateManualSelectableCells();
+            document.getElementById('gameStatus').textContent = 'Готов к игре';
+        }
+
+        // Переключатель кнопки: до показа — «Показать все категории», после — «Скрыть все категории».
+        // Нажатие во время последовательного показа сразу скрывает категории.
+        function toggleShowAllCategories() {
+            if (gameState === 'showingAllCategories') {
+                // Показ ещё не завершился — прерываем его и сразу скрываем всё показанное
+                clearCategoryRevealTimers();
+                stopCategoryRevealLoopSound();
+                hideAllCategoriesIntro();
+            } else if (gameState === 'allCategoriesShown') {
+                hideAllCategoriesIntro();
+            } else if (gameState === 'idle') {
+                showAllCategoriesIntro();
+            }
+        }
+
+        function onCellClick(r, c) {
+            const cell = grid[r][c];
+            const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+            
+            // Режим ручного выбора игрока
+            if (gameState === 'selectingPlayer') {
+                if (cell.player) {
+                    // Находим имя игрока, чью территорию кликнули
+                    selectPlayer(cell.player);
+                }
+                return;
+            }
+            
+            // Режим обмена категорией: клик по подсвеченной территории другого игрока
+            if (gameState === 'categoryExchange') {
+                if (categoryExchangePlayer && cell.player && cell.player !== categoryExchangePlayer &&
+                    cellEl.classList.contains('category-exchange-target')) {
+                    exchangeCategory(categoryExchangePlayer, cell.player);
+                }
+                return;
+            }
+            
+            // Режим выбора следующего игрока: клик по подсвеченной территории другого игрока
+            if (gameState === 'chooseNextPlayer') {
+                if (chooseNextPlayerFor && cell.player && cell.player !== chooseNextPlayerFor &&
+                    cellEl.classList.contains('next-player-target')) {
+                    selectNextPlayer(cell.player);
+                }
+                return;
+            }
+            
+            if (gameState === 'showingCategories') {
+                if (cell.player !== selectedPlayer && cellEl.classList.contains('neighbor-highlight')) {
+                    selectedOpponent = cell.player;
+                    // Категория дуэли уже сохранена в selectedCategory (категория атакующего)
+                    
+                    // Останавливаем последовательный показ категорий, если он ещё идёт
+                    clearCategoryRevealTimers();
+                    document.querySelectorAll('.neighbor-highlight').forEach(el => el.classList.remove('neighbor-highlight'));
+                    
+                    // Финал (осталось 2 игрока): вместо обычной дуэли —
+                    // выбор порядка категорий и серия дуэлей
+                    if (isFinalDuelMode()) {
+                        startFinalOrderChoice();
+                        return;
+                    }
+
+                    gameState = 'selectingWinner';
+                    updateButtonsState();
+                    highlightBothPlayers(selectedPlayer, selectedOpponent);
+                    applyBonusHighlights();
+                    renderBonusControls();
+                    document.getElementById('gameStatus').textContent = 'Выберите победителя';
+                    playCategorySelectSound();
+                }
+            } else if (gameState === 'selectingWinner') {
+                if (cell.player === selectedPlayer || cell.player === selectedOpponent) {
+                    const winner = cell.player;
+                    const loser = winner === selectedPlayer ? selectedOpponent : selectedPlayer;
+                    
+                    document.querySelectorAll('.selectable-winner').forEach(el => el.classList.remove('selectable-winner'));
+                    
+                    clearBonusControls();
+                    // В финале победитель раунда учитывается по счёту (без немедленного захвата):
+                    // серия дуэлей продолжается, пока не определён победитель всего финала
+                    if (finalState) {
+                        handleFinalDuelResult(winner);
+                        return;
+                    }
+
+                    gameState = 'capturing';
+                    updateButtonsState();
+                    captureTerritory(winner, loser);
+                }
+            }
+        }
+
+        function highlightBothPlayers(player1, player2) {
+            getPlayerCells(player1).forEach(({ r, c }) => {
+                const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                cellEl.classList.add('selectable-winner');
+            });
+            getPlayerCells(player2).forEach(({ r, c }) => {
+                const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                cellEl.classList.add('selectable-winner');
+            });
+        }
+
+        // Отсортировать клетки территории по близости к другой территории (BFS от границы)
+        function sortCellsByProximity(cells, fromCells) {
+            const queue = fromCells.map(({ r, c }) => ({ r, c, dist: 0 }));
+            const visited = new Set(fromCells.map(({ r, c }) => `${r},${c}`));
+            const result = [];
+            const remaining = new Set(cells.map(({ r, c }) => `${r},${c}`));
+            
+            const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+            
+            while (queue.length > 0) {
+                const { r, c, dist } = queue.shift();
+                
+                directions.forEach(([dr, dc]) => {
+                    const nr = r + dr, nc = c + dc;
+                    const key = `${nr},${nc}`;
+                    if (nr < 0 || nr >= fieldRows || nc < 0 || nc >= fieldCols) return;
+                    if (visited.has(key)) return;
+                    visited.add(key);
+                    
+                    if (remaining.has(key)) {
+                        remaining.delete(key);
+                        result.push({ r: nr, c: nc, dist: dist + 1 });
+                        queue.push({ r: nr, c: nc, dist: dist + 1 });
+                    } else if (grid[nr][nc].player) {
+                        queue.push({ r: nr, c: nc, dist: dist + 1 });
+                    }
+                });
+            }
+            
+            return result;
+        }
+
+        function captureTerritory(winner, loser) {
+            // Клетки проигравшего, отсортированные от границы с победителем
+            const winnerCells = getPlayerCells(winner);
+            const loserCells = sortCellsByProximity(getPlayerCells(loser), winnerCells);
+            const duelCategory = selectedCategory; // Категория атакующего
+
+            // Снимок поля ПЕРЕД захватом (для кнопки «Отменить захват»)
+            snapshotBeforeCapture = {
+                grid: grid.map(row => row.map(cell => ({ ...cell }))),
+                playerStartCells: { ...playerStartCells },
+                winner,
+                loser
+            };
+            
+            playCaptureSound();
+            document.getElementById('gameStatus').textContent = `Захват! ${winner} побеждает!`;
+            
+            // Сбрасываем старые подсветки
+            document.querySelectorAll('.selectable-winner, .selected-player, .neighbor-highlight, .white-flash, .bonus-territory, .category-exchange-target, .next-player-target').forEach(el => {
+                el.classList.remove('selectable-winner', 'selected-player', 'neighbor-highlight', 'white-flash', 'bonus-territory', 'category-exchange-target', 'next-player-target');
+            });
+            
+            // Территория победителя становится оранжевой (без внутренних границ)
+            winnerCells.forEach(({ r, c }) => {
+                const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (cellEl) {
+                    cellEl.classList.remove('border-top', 'border-right', 'border-bottom', 'border-left');
+                    cellEl.classList.add('capture-winner');
+                }
+            });
+            
+            // Территория проигравшего становится голубой (без внутренних границ)
+            loserCells.forEach(({ r, c }) => {
+                const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (cellEl) {
+                    cellEl.classList.remove('border-top', 'border-right', 'border-bottom', 'border-left');
+                    cellEl.classList.add('capture-loser');
+                }
+            });
+            
+            // Проигравший игрок сразу исчезает с поля — скрываем его имя
+            const loserMain = getMainCell(loser);
+            if (loserMain) {
+                const loserCellEl = document.querySelector(`[data-row="${loserMain.r}"][data-col="${loserMain.c}"]`);
+                if (loserCellEl) {
+                    const loserNameEl = loserCellEl.querySelector('.player-name');
+                    if (loserNameEl) loserNameEl.style.display = 'none';
+                    const loserCatEl = loserCellEl.querySelector('.category-name');
+                    if (loserCatEl) loserCatEl.style.display = 'none';
+                }
+            }
+            
+            // Через 2 секунды начинается захват территории проигравшего (1 клетка в 100 мс)
+            setTimeout(() => {
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (gameState !== 'capturing') {
+                        // Захват был отменён — останавливаемся
+                        clearInterval(interval);
+                        return;
+                    }
+                    if (i >= loserCells.length) {
+                        clearInterval(interval);
+                        finishCapture(winner, loser);
+                        return;
+                    }
+                    
+                    const { r, c } = loserCells[i];
+                    const cellEl = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                    
+                    // По мере захвата клетка проигравшего становится оранжевой (без границ)
+                    cellEl.classList.remove('capture-loser');
+                    cellEl.classList.add('capture-winner');
+                    cellEl.classList.remove('border-top', 'border-right', 'border-bottom', 'border-left');
+                    cellEl.classList.add('capturing');
+                    setTimeout(() => cellEl.classList.remove('capturing'), 500);
+                    
+                    // Обновляем данные клетки
+                    grid[r][c].player = winner;
+                    grid[r][c].category = duelCategory; // Категория атакующего
+                    
+                    i++;
+                }, 100);
+            }, 2000);
+        }
+
+        function finishCapture(winner, loser) {
+            selectedPlayer = winner;
+            clearBonusControls();
+            updateStreaks(winner, loser);
+
+            // Проверяем, остался ли один игрок после захвата
+            const remainingPlayers = getAllPlayers();
+            if (remainingPlayers.length === 1) {
+                // Игра окончена: победитель определён
+                gameOver = true;
+                gameState = 'gameOver';
+                document.getElementById('gameStatus').textContent = `🏆 Победитель: ${winner}! 🏆`;
+                updateButtonsState();
+                renderField();
+                highlightSelectedPlayer(winner);
+                return;
+            }
+
+            // Учитываем сыгранную дуэль: возможно, выпуск завершён.
+            // Оглашение лидера происходит ТОЛЬКО по кнопке «Огласить лидера»,
+            // поэтому категория победителя всегда обновляется на всех клетках ниже.
+            duelsInCurrentEpisode++;
+            updateDuelCounter();
+            
+            // Обновляем категорию на ВСЕХ клетках победителя
+            const winnerCells = getPlayerCells(winner);
+            winnerCells.forEach(({ r, c }) => {
+                grid[r][c].category = selectedCategory;
+            });
+            
+            // Поле остаётся оранжевым ещё секунду после присоединения территории
+            setTimeout(() => {
+                // Перерисовываем поле (имя и категория будут на новой главной клетке)
+                renderField();
+                // Победитель снова показывается как выбранная территория (фиолетовый)
+                highlightSelectedPlayer(winner);
+
+                // Если на поле осталось два игрока — сразу начинается финал:
+                // кнопки выбора категории дуэли показываются без дополнительных действий,
+                // независимо от наличия бонусной категории
+                const remainingAfterCapture = getAllPlayers();
+                if (remainingAfterCapture.length === 2) {
+                    selectedOpponent = remainingAfterCapture.find(p => p !== winner);
+                    startFinalOrderChoice();
+                    return;
+                }
+
+                // Показываем категорию победителя на получившейся территории в течение 1 секунды
+                const mainCell = getMainCell(winner);
+                if (mainCell) {
+                    const mainCellEl = document.querySelector(`[data-row="${mainCell.r}"][data-col="${mainCell.c}"]`);
+                    if (mainCellEl) {
+                        mainCellEl.classList.add('show-winner-category');
+                        setTimeout(() => mainCellEl.classList.remove('show-winner-category'), 1000);
+                    }
+                }
+                // Переходим в состояние выбранного игрока — категории появятся по кнопке «Показать категории»
+                gameState = 'playerSelected';
+                updateButtonsState();
+                updateManualSelectableCells();
+                // Победитель с бонусом снова активен — золотая подсветка возвращается
+                applyBonusHighlights();
+                // Если победитель получил бонус за 3 победы подряд — предлагаем выбрать тип бонуса
+                if (chooseBonusFor === winner) {
+                    renderBonusChoice();
+                } else {
+                    document.getElementById('gameStatus').textContent = `Выбран: ${winner}`;
+                }
+            }, 1000);
+        }
+
+        function backToField() {
+            // Останавливаем последовательный показ категорий, если он ещё идёт
+            clearCategoryRevealTimers();
+            
+            // Пока выпуск завершён и лидер не оглашён — возврат на поле запрещён
+            if (isCurrentEpisodeFinished() && gameState !== 'episodeHighlight') return;
+            
+            document.querySelectorAll('.selected-player, .neighbor-highlight, .selectable-winner, .capture-winner, .capture-loser, .category-exchange-target, .next-player-target').forEach(el => {
+                el.classList.remove('selected-player', 'neighbor-highlight', 'selectable-winner', 'capture-winner', 'capture-loser', 'category-exchange-target', 'next-player-target');
+            });
+            
+            stopNextPlayerTarget();
+            finalState = null;
+            gameState = 'idle';
+            selectedPlayer = null;
+            selectedCategory = null;
+            selectedOpponent = null;
+            chooseBonusFor = null;
+            categoryExchangePlayer = null;
+            chooseNextPlayerFor = null;
+            revealedNeighbors.clear();
+            resetWinStreaks();
+            
+            // Перерисовываем поле, чтобы заново применить контекстную подсветку территорий с бонусом
+            renderField();
+            updateButtonsState();
+            updateManualSelectableCells();
+            if (gameOver) {
+                // Из завершённой игры — возврат к настройкам (новая игра)
+                gameOver = false;
+                snapshotBeforeCapture = null;
+                document.getElementById('setupScreen').style.display = '';
+                document.getElementById('gameScreen').classList.remove('active');
+                selectedPlayer = null;
+                selectedCategory = null;
+                selectedOpponent = null;
+                return;
+            }
+            document.getElementById('gameStatus').textContent = 'Готов к игре';
+        }
+
+        // =====================================================================
+        // ИНИЦИАЛИЗАЦИЯ
+        // =====================================================================
+
+        // Отмена последнего захвата: возврат поля к состоянию до дуэли
+        function undoCapture() {
+            if (!snapshotBeforeCapture || gameOver) return;
+            if (gameState === 'episodeHighlight' || gameState === 'categoryExchange') return;
+
+            // Отменённая дуэль больше не считается сыгранной: возвращаем счётчик дуэлей выпуска.
+            // Если это была последняя дуэль выпуска — выпуск снова становится незавершённым,
+            // и оглашение лидера блокируется до повторного завершения дуэли.
+            if (duelsInCurrentEpisode > 0) {
+                duelsInCurrentEpisode--;
+            }
+            updateDuelCounter();
+
+            // Восстанавливаем данные поля и стартовые клетки
+            grid = snapshotBeforeCapture.grid.map(row => row.map(cell => ({ ...cell })));
+            playerStartCells = { ...snapshotBeforeCapture.playerStartCells };
+
+            // Очищаем подсветки и сбрасываем состояние
+            document.querySelectorAll('.selected-player, .neighbor-highlight, .selectable-winner, .capture-winner, .capture-loser, .category-exchange-target, .next-player-target').forEach(el => {
+                el.classList.remove('selected-player', 'neighbor-highlight', 'selectable-winner', 'capture-winner', 'capture-loser', 'category-exchange-target', 'next-player-target');
+            });
+
+            stopNextPlayerTarget();
+            snapshotBeforeCapture = null;
+            finalState = null;
+            chooseBonusFor = null;
+            categoryExchangePlayer = null;
+            chooseNextPlayerFor = null;
+            updateButtonsState();
+            renderField();
+
+            // Если после отмены на поле осталось два игрока — финал должен
+            // начаться заново: снова показываем кнопки выбора категории дуэли
+            if (getAllPlayers().length === 2) {
+                startFinalOrderChoice();
+                return;
+            }
+
+            gameState = 'selectingWinner';
+            updateButtonsState();
+            highlightBothPlayers(selectedPlayer, selectedOpponent);
+            renderBonusControls();
+            document.getElementById('gameStatus').textContent = 'Выберите победителя';
+        }
+
+        // Применить выбранные размеры поля к редактору
+        function applyFieldSizeToEditor() {
+            const editor = document.getElementById('fieldEditor');
+            editor.style.gridTemplateColumns = `repeat(${fieldCols}, 1fr)`;
+        }
+
+        // Обработчик смены размеров поля
+        function onFieldSizeChange() {
+            const widthSelect = document.getElementById('fieldWidthSelect');
+            const heightSelect = document.getElementById('fieldHeightSelect');
+            fieldCols = parseInt(widthSelect.value, 10) || 10;
+            fieldRows = parseInt(heightSelect.value, 10) || 10;
+            applyFieldSizeToEditor();
+            generateRandomField();
+            // Пересчитываем количество дуэлей по умолчанию под новый размер поля
+            const count = parseInt(document.getElementById('episodesCount').value, 10) || 1;
+            episodeDuelCounts = []; // сбрасываем сохранённые значения, чтобы дефолт пересчитался
+            renderEpisodesList(count);
+        }
+
+        function startGame() {
+            initAudio();
+            readEpisodeSettings();
+            currentEpisode = 0;
+            duelsInCurrentEpisode = 0;
+            if (episodeHighlightTimeout) clearTimeout(episodeHighlightTimeout);
+            updateDuelCounter();
+            loadGridFromEditor();
+            resetStreaks();
+            bonusCategory = document.getElementById('bonusCategoryInput').value.trim();
+            
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('gameScreen').classList.add('active');
+            
+            renderField();
+            updateButtonsState();
+        }
+
+        setupSoundInputs();
+        tryLoadDefaultSounds();
+        applyFieldSizeToEditor();
+        generateRandomField();
+        renderEpisodesList(1);
+
+        // Пересчёт шрифта клеток при изменении размера окна (ширина клетки меняется)
+        window.addEventListener('resize', () => {
+            if (document.getElementById('gameScreen').classList.contains('active')) {
+                updateCellFontSizes();
+            }
+        });
+    </script>
+</body>
+</html>
